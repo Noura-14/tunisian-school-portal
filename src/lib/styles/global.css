@@ -1,0 +1,61 @@
+:root {
+	--background: #faf8f5;
+	--surface: #ffffff;
+	--surface-soft: #f5f1ee;
+	--text: #292526;
+	--muted-text: #756c6d;
+	--border: #e5deda;
+	--primary: #8a1538;
+	--primary-dark: #6f102d;
+	--tunisia-red: #e70013;
+	--success: #2e7d5b;
+	--warning: #b7791f;
+	--danger: #c62828;
+	--shadow: 0 8px 24px rgba(67, 42, 43, 0.08);
+	--border-radius: 10px;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	min-width: 320px;
+	min-height: 100%;
+	overflow-x: hidden;
+	background: var(--background);
+}
+
+body {
+	margin: 0;
+	min-width: 320px;
+	min-height: 100dvh;
+	overflow-x: hidden;
+	background: var(--background);
+	color: var(--text);
+	font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+	font-size: 16px;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+img,
+svg,
+video,
+canvas {
+	display: block;
+	max-width: 100%;
+}
+
+a {
+	color: inherit;
+}
