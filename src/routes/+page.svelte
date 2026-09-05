@@ -6,7 +6,9 @@
 
 	const isArabic = $derived(language === 'ar');
 	const pageDirection = $derived(isArabic ? 'rtl' : 'ltr');
-	const documentTitle = $derived(isArabic ? 'المدرسة التونسية بالدوحة' : 'Tunisian School in Doha');
+	const documentTitle = $derived(
+		isArabic ? 'المدرسة التونسية بالدوحة' : 'Tunisian School in Doha'
+	);
 
 	onMount(() => {
 		const savedTheme = window.localStorage.getItem('school-theme');
@@ -43,375 +45,693 @@
 	/>
 </svelte:head>
 
-<main class:dark={theme === 'dark'} class="portal-page" dir={pageDirection}>
-	<div class="page-frame">
-		<header class="page-header">
-			<a class="wordmark" href="/" aria-label={isArabic ? 'الصفحة الرئيسية' : 'Home'}>
-				<span class="wordmark-seal" aria-hidden="true">ت</span>
-				<span class="wordmark-text">
-					<strong>{isArabic ? 'المدرسة التونسية' : 'Tunisian School'}</strong>
-					<small>{isArabic ? 'بالدوحة' : 'in Doha'}</small>
-				</span>
-			</a>
+<main class:dark={theme === 'dark'} class="welcome-page" dir={pageDirection}>
+	<div class="hero-background" aria-hidden="true"></div>
+	<div class="hero-overlay" aria-hidden="true"></div>
+	<div class="hero-grain" aria-hidden="true"></div>
 
-			<div class="header-controls">
-				<div class="identity-flags" aria-label={isArabic ? 'تونس وقطر' : 'Tunisia and Qatar'}>
-					<span aria-hidden="true">🇹🇳</span>
-					<span aria-hidden="true">🇶🇦</span>
-				</div>
-				<div class="language-control" aria-label={isArabic ? 'اختيار اللغة' : 'Language selection'}>
-					<button class:active={isArabic} type="button" aria-pressed={isArabic} onclick={() => setLanguage('ar')}>العربية</button>
-					<span aria-hidden="true">|</span>
-					<button class:active={!isArabic} type="button" aria-pressed={!isArabic} onclick={() => setLanguage('en')}>English</button>
-				</div>
-				<button
-					class="theme-control"
-					type="button"
-					aria-label={theme === 'light' ? 'تفعيل الوضع الداكن' : 'تفعيل الوضع الفاتح'}
-					aria-pressed={theme === 'dark'}
-					onclick={toggleTheme}
-				>
-					<span aria-hidden="true">{theme === 'light' ? '◐' : '○'}</span>
-				</button>
+	<header class="site-header entrance header-entrance">
+		<a class="brand" href="/" aria-label={isArabic ? 'الصفحة الرئيسية' : 'Home'}>
+			<span class="brand-logo-wrap">
+				<img
+					class="brand-logo"
+					src="/images/school-logo.png"
+					alt={isArabic ? 'شعار المدرسة التونسية بالدوحة' : 'Tunisian School in Doha logo'}
+				/>
+			</span>
+			<span class="brand-copy">
+				<strong>{isArabic ? 'المدرسة التونسية بالدوحة' : 'Tunisian School in Doha'}</strong>
+				<small>{isArabic ? 'فرع اللقطة · إعدادي وثانوي' : 'Al-Luqta Branch · Preparatory & Secondary'}</small>
+			</span>
+		</a>
+
+		<div class="header-controls">
+			<div class="country-pills" aria-label={isArabic ? 'تونس وقطر' : 'Tunisia and Qatar'}>
+				<span>🇹🇳</span>
+				<span>🇶🇦</span>
 			</div>
-		</header>
 
-		<div class="content-grid">
-			<section class="welcome-panel" aria-labelledby="school-name">
-				<div class="intro-block entrance intro-one">
-					<p class="section-label">{isArabic ? 'فضاء المتابعة المدرسية' : 'School follow-up portal'}</p>
-					<h1 id="school-name">{isArabic ? 'المدرسة التونسية بالدوحة' : 'Tunisian School in Doha'}</h1>
-					<div class="school-details">
-						<span>{isArabic ? 'فرع اللقطة' : 'Al-Luqta Branch'}</span>
-						<span class="detail-divider" aria-hidden="true"></span>
-						<span>{isArabic ? 'إعدادي و ثانوي' : 'Preparatory & Secondary'}</span>
-					</div>
-				</div>
+			<div class="language-control" aria-label={isArabic ? 'اختيار اللغة' : 'Language selection'}>
+				<button
+					class:active={isArabic}
+					type="button"
+					aria-pressed={isArabic}
+					onclick={() => setLanguage('ar')}
+				>العربية</button>
+				<span aria-hidden="true">|</span>
+				<button
+					class:active={!isArabic}
+					type="button"
+					aria-pressed={!isArabic}
+					onclick={() => setLanguage('en')}
+				>English</button>
+			</div>
 
-				<div class="school-message entrance intro-two">
-					<p class="supporting-text">
-						{isArabic
-							? 'متابعة التلاميذ والحضور والسلوك المدرسي في مكان واحد.'
-							: 'Student attendance and behaviour follow-up, all in one place.'}
-					</p>
-				</div>
+			<button
+				class="theme-control"
+				type="button"
+				aria-label={theme === 'light' ? 'تفعيل الوضع الداكن' : 'تفعيل الوضع الفاتح'}
+				aria-pressed={theme === 'dark'}
+				onclick={toggleTheme}
+			>
+				<span aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span>
+			</button>
+		</div>
+	</header>
 
-				<div class="action-block entrance intro-three">
-					<a class="primary-button" href="/login">
-						<span>{isArabic ? 'الدخول إلى فضاء المتابعة' : 'Go to the Follow-up Portal'}</span>
-						<span class="arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>
-					</a>
-				</div>
-			</section>
+	<section class="hero-content">
+		<div class="hero-copy entrance copy-entrance">
+			<div class="eyebrow">
+				<span class="eyebrow-line" aria-hidden="true"></span>
+				<span>{isArabic ? 'المدرسة التونسية بالدوحة' : 'Tunisian School in Doha'}</span>
+			</div>
 
-			<aside class="visual-panel entrance intro-visual" aria-label={isArabic ? 'معلومات المدرسة' : 'School information'}>
-				<div class="grid-lines" aria-hidden="true"></div>
-				<div class="emblem-card">
-					<div class="emblem-topline"><span>TS</span><span>DOHA · 2026</span></div>
-					<div class="emblem-rule"></div>
-					<div class="emblem-mark" aria-hidden="true">
-						<span class="book-page page-left"></span>
-						<span class="book-page page-right"></span>
-						<span class="book-spine"></span>
-						<span class="book-line"></span>
-					</div>
-					<p class="emblem-name">المدرسة التونسية<br />بالدوحة</p>
-					<p class="emblem-note">{isArabic ? 'فرع اللقطة' : 'Al-Luqta Branch'}</p>
+			<h2>
+				{isArabic
+					? 'هوية تونسية و تعليم متميز، في قلب الدوحة.'
+					: 'Tunisian identity, distinguished education, at the heart of Doha.'}
+			</h2>
+
+			<p class="hero-description">
+				{isArabic
+					? 'فضاء مدرسي يجمع بين أصالة التعليم التونسي وروح الدوحة، لمتابعة التلاميذ والحضور والسلوك المدرسي في مكان واحد.'
+					: 'A school space that brings together the spirit of Tunisian education and Doha, with student attendance and behaviour follow-up in one place.'}
+			</p>
+
+			<div class="hero-actions">
+				<a class="primary-button" href="/login">
+					<span>{isArabic ? 'الدخول إلى فضاء المتابعة' : 'Enter the Follow-up Portal'}</span>
+					<span class="button-arrow" aria-hidden="true">{isArabic ? '←' : '→'}</span>
+				</a>
+
+				<div class="location-note">
+					<span class="location-dot" aria-hidden="true"></span>
+					<span>{isArabic ? 'فرع اللقطة · الدوحة، قطر' : 'Al-Luqta Branch · Doha, Qatar'}</span>
 				</div>
-				<div class="visual-caption">
-					<span class="caption-line" aria-hidden="true"></span>
-					<p>{isArabic ? 'تعليم · متابعة · مسؤولية' : 'Learning · Follow-up · Responsibility'}</p>
-				</div>
-			</aside>
+			</div>
 		</div>
 
-		<footer class="page-footer">
-			<span>{isArabic ? 'فرع اللقطة · الدوحة، قطر' : 'Al-Luqta Branch · Doha, Qatar'}</span>
-			<span class="footer-mark" aria-hidden="true">—</span>
-			<span>{isArabic ? 'منصة داخلية' : 'Internal platform'}</span>
-		</footer>
-	</div>
+		<div class="hero-brand-card entrance card-entrance">
+			<div class="card-glow" aria-hidden="true"></div>
+
+			<div class="card-top">
+				<span>TS · DOHA</span>
+				<span>1988</span>
+			</div>
+
+			<div class="card-logo">
+				<img
+					src="/images/school-logo.png"
+					alt={isArabic ? 'شعار المدرسة التونسية بالدوحة' : 'Tunisian School in Doha logo'}
+				/>
+			</div>
+
+			<div class="card-divider" aria-hidden="true"></div>
+
+			<p class="card-arabic">المدرسة التونسية<br />بالدوحة</p>
+			<p class="card-english">Tunisian School in Doha</p>
+
+			<div class="card-footer">
+				<span>{isArabic ? 'فرع اللقطة' : 'Al-Luqta Branch'}</span>
+				<span>{isArabic ? 'إعدادي وثانوي' : 'Preparatory & Secondary'}</span>
+			</div>
+		</div>
+	</section>
+
+	<footer class="site-footer entrance footer-entrance">
+		<div>
+			<span class="footer-brand">TSD</span>
+			<span>{isArabic ? 'تعليم · متابعة · مسؤولية' : 'Learning · Follow-up · Responsibility'}</span>
+		</div>
+		<span>{isArabic ? 'منصة داخلية' : 'Internal platform'}</span>
+	</footer>
 </main>
 
 <style>
-	.portal-page {
-		--page-background: #f4f1ed;
-		--panel: #fffdfb;
-		--surface: #ffffff;
-		--text: #302629;
-		--muted: #827477;
-		--border: #e4dcd8;
-		--accent: #7b2638;
-		--accent-dark: #5f1c2c;
-		--accent-soft: #eadcdf;
-		--shadow: 0 18px 50px rgba(75, 49, 47, 0.08);
-		min-height: 100svh;
-		background: var(--page-background);
-		color: var(--text);
-		transition: background-color 220ms ease, color 220ms ease;
-	}
-
-	.portal-page.dark {
-		--page-background: #242021;
-		--panel: #2d2829;
-		--surface: #352e30;
-		--text: #f5eeeb;
-		--muted: #c3b3b0;
-		--border: #514447;
-		--accent: #bd7180;
-		--accent-dark: #a95668;
-		--accent-soft: #56373e;
-		--shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
-	}
-
-	.page-frame {
+	.welcome-page {
+		--burgundy: #7b2638;
+		--burgundy-dark: #5e1b2b;
+		--burgundy-light: #a94d60;
+		--cream: #f6f0eb;
+		--cream-soft: rgba(255, 252, 249, 0.93);
+		--white: #fffdfb;
+		--text: #302429;
+		--muted: #6f6265;
+		--border: rgba(255, 255, 255, 0.42);
+		position: relative;
 		display: flex;
-		width: min(100% - 2rem, 90rem);
 		min-height: 100svh;
-		margin: 0 auto;
 		flex-direction: column;
+		overflow: hidden;
+		background: #2d2023;
+		color: var(--white);
+		isolation: isolate;
 	}
 
-	.page-header {
+	.welcome-page.dark {
+		--cream-soft: rgba(42, 31, 34, 0.93);
+		--text: #f8f0ec;
+		--muted: #d0bfba;
+		background: #21191c;
+	}
+
+	.hero-background {
+		position: absolute;
+		z-index: -4;
+		inset: 0;
+		background-image: url('/images/tunisia-qatar.png');
+		background-position: center;
+		background-size: cover;
+		transform: scale(1.02);
+		animation: background-breathe 16s ease-in-out infinite alternate;
+	}
+
+	.hero-overlay {
+		position: absolute;
+		z-index: -3;
+		inset: 0;
+		background:
+			linear-gradient(90deg, rgba(43, 24, 28, 0.84) 0%, rgba(69, 31, 39, 0.67) 42%, rgba(55, 25, 31, 0.34) 100%),
+			linear-gradient(180deg, rgba(34, 18, 22, 0.34) 0%, rgba(73, 30, 39, 0.22) 50%, rgba(28, 18, 21, 0.62) 100%);
+	}
+
+	.welcome-page[dir='rtl'] .hero-overlay {
+		background:
+			linear-gradient(270deg, rgba(43, 24, 28, 0.84) 0%, rgba(69, 31, 39, 0.67) 42%, rgba(55, 25, 31, 0.34) 100%),
+			linear-gradient(180deg, rgba(34, 18, 22, 0.34) 0%, rgba(73, 30, 39, 0.22) 50%, rgba(28, 18, 21, 0.62) 100%);
+	}
+
+	.hero-grain {
+		position: absolute;
+		z-index: -2;
+		inset: 0;
+		pointer-events: none;
+		opacity: 0.08;
+		background-image: radial-gradient(rgba(255, 255, 255, 0.9) 0.6px, transparent 0.6px);
+		background-size: 6px 6px;
+	}
+
+	.site-header {
 		display: flex;
+		width: min(100% - 2rem, 88rem);
+		margin: 0 auto;
 		align-items: center;
 		justify-content: space-between;
-		padding: 1.35rem 0;
-		border-bottom: 1px solid var(--border);
+		gap: 1rem;
+		padding: 1.1rem 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.18);
 	}
 
-	.wordmark {
+	.brand {
 		display: flex;
+		min-width: 0;
 		align-items: center;
-		gap: 0.7rem;
-		color: var(--text);
+		gap: 0.8rem;
+		color: white;
 		text-decoration: none;
 	}
 
-	.wordmark-seal {
+	.brand-logo-wrap {
+		display: grid;
+		width: 3.35rem;
+		height: 3.35rem;
+		flex: 0 0 auto;
+		place-items: center;
+		border: 1px solid rgba(255, 255, 255, 0.34);
+		border-radius: 0.9rem;
+		background: rgba(255, 253, 251, 0.96);
+		box-shadow: 0 8px 25px rgba(25, 8, 12, 0.18);
+		overflow: hidden;
+	}
+
+	.brand-logo {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		padding: 0.25rem;
+	}
+
+	.brand-copy {
+		display: flex;
+		min-width: 0;
+		flex-direction: column;
+		line-height: 1.3;
+	}
+
+	.brand-copy strong {
+		font-size: clamp(0.88rem, 1.4vw, 1.05rem);
+		font-weight: 750;
+	}
+
+	.brand-copy small {
+		margin-top: 0.12rem;
+		color: rgba(255, 255, 255, 0.7);
+		font-size: 0.72rem;
+	}
+
+	.header-controls {
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+	}
+
+	.country-pills {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.45rem 0.55rem;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 999px;
+		background: rgba(55, 24, 30, 0.25);
+		backdrop-filter: blur(10px);
+		font-size: 0.88rem;
+	}
+
+	.language-control {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		color: rgba(255, 255, 255, 0.65);
+		font-size: 0.76rem;
+	}
+
+	.language-control button {
+		padding: 0.4rem 0.1rem;
+		border: 0;
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
+		font: inherit;
+	}
+
+	.language-control button.active {
+		color: white;
+		font-weight: 750;
+	}
+
+	.theme-control {
 		display: grid;
 		width: 2.35rem;
 		height: 2.35rem;
 		place-items: center;
-		border: 1px solid var(--accent);
-		border-radius: 0.6rem 0.6rem 0.6rem 0.15rem;
-		color: var(--accent);
-		font-size: 1.2rem;
-		font-weight: 700;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 0.7rem;
+		background: rgba(55, 24, 30, 0.25);
+		color: white;
+		cursor: pointer;
+		font-size: 1rem;
+		backdrop-filter: blur(10px);
 	}
 
-	.wordmark-text {
-		display: flex;
-		flex-direction: column;
-		line-height: 1.25;
+	.hero-content {
+		display: grid;
+		width: min(100% - 2rem, 88rem);
+		flex: 1;
+		margin: 0 auto;
+		align-items: center;
+		gap: 2rem;
+		padding: 3.5rem 0 4rem;
 	}
 
-	.wordmark-text strong { font-size: 0.82rem; }
-	.wordmark-text small { color: var(--muted); font-size: 0.7rem; }
+	.hero-copy {
+		max-width: 43rem;
+	}
 
-	.header-controls,
-	.language-control {
+	.eyebrow {
 		display: flex;
 		align-items: center;
+		gap: 0.7rem;
+		margin-bottom: 1.25rem;
+		color: #f0cfd5;
+		font-size: 0.78rem;
+		font-weight: 750;
+		letter-spacing: 0.04em;
 	}
 
-	.header-controls { gap: 0.8rem; }
-	.language-control { gap: 0.38rem; color: var(--muted); font-size: 0.78rem; }
-	.identity-flags { display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; line-height: 1; }
+	.eyebrow-line {
+		width: 2.2rem;
+		height: 1px;
+		background: #e8aebb;
+	}
 
-	.language-control button,
-	.theme-control {
-		border: 0;
-		background: transparent;
-		color: var(--muted);
+	h1 {
+		max-width: 42rem;
+		margin: 0;
+		font-size: clamp(2.4rem, 8vw, 5.6rem);
+		font-weight: 760;
+		letter-spacing: -0.045em;
+		line-height: 1.2;
+		text-wrap: balance;
+	}
+
+	.hero-description {
+		max-width: 38rem;
+		margin: 1.5rem 0 0;
+		color: rgba(255, 249, 246, 0.82);
+		font-size: clamp(1rem, 1.8vw, 1.16rem);
+		line-height: 1.95;
+	}
+
+	.hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 1rem;
+		margin-top: 2rem;
+	}
+
+	.primary-button {
+		display: inline-flex;
+		min-height: 3.55rem;
+		align-items: center;
+		justify-content: space-between;
+		gap: 2.2rem;
+		padding: 0.8rem 1.2rem 0.8rem 1.35rem;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 0.85rem;
+		background: var(--burgundy);
+		box-shadow: 0 12px 30px rgba(32, 8, 15, 0.28);
+		color: white;
 		cursor: pointer;
+		font-size: 0.98rem;
+		font-weight: 750;
+		text-decoration: none;
+		transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 	}
 
-	.language-control button { padding: 0.45rem 0.1rem; font-size: 0.78rem; }
-	.language-control button.active { color: var(--accent); font-weight: 700; }
+	.primary-button:hover {
+		background: var(--burgundy-dark);
+		box-shadow: 0 16px 35px rgba(32, 8, 15, 0.35);
+		transform: translateY(-2px);
+	}
 
-	.theme-control {
+	.primary-button:active {
+		transform: translateY(1px);
+	}
+
+	.button-arrow {
 		display: grid;
-		width: 2.3rem;
-		height: 2.3rem;
+		width: 2rem;
+		height: 2rem;
 		place-items: center;
-		border: 1px solid var(--border);
-		border-radius: 0.6rem;
-		background: var(--surface);
-		color: var(--accent);
-		font-size: 1.1rem;
+		border-radius: 0.5rem;
+		background: rgba(255, 255, 255, 0.13);
+		font-size: 1.15rem;
+	}
+
+	.location-note {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: rgba(255, 249, 246, 0.72);
+		font-size: 0.78rem;
+	}
+
+	.location-dot {
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: 50%;
+		background: #e8aebb;
+		box-shadow: 0 0 0 5px rgba(232, 174, 187, 0.12);
+	}
+
+	.hero-brand-card {
+		position: relative;
+		width: min(100%, 24rem);
+		justify-self: center;
+		padding: 1.25rem;
+		border: 1px solid rgba(255, 255, 255, 0.34);
+		border-radius: 1.35rem;
+		background: var(--cream-soft);
+		box-shadow: 0 25px 65px rgba(26, 8, 13, 0.3);
+		color: var(--text);
+		backdrop-filter: blur(12px);
+		overflow: hidden;
+	}
+
+	.card-glow {
+		position: absolute;
+		top: -8rem;
+		right: -5rem;
+		width: 15rem;
+		height: 15rem;
+		border-radius: 50%;
+		background: rgba(123, 38, 56, 0.12);
+		filter: blur(5px);
+	}
+
+	.card-top {
+		position: relative;
+		display: flex;
+		justify-content: space-between;
+		padding-bottom: 0.8rem;
+		border-bottom: 1px solid rgba(123, 38, 56, 0.18);
+		color: var(--burgundy);
+		font-family: Georgia, serif;
+		font-size: 0.64rem;
+		letter-spacing: 0.12em;
+	}
+
+	.card-logo {
+		position: relative;
+		display: grid;
+		width: 10.5rem;
+		height: 10.5rem;
+		margin: 1.35rem auto 0.8rem;
+		place-items: center;
+		border-radius: 1rem;
+		background: rgba(255, 255, 255, 0.72);
+		box-shadow: 0 10px 25px rgba(75, 32, 39, 0.08);
+		overflow: hidden;
+	}
+
+	.card-logo img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		padding: 0.25rem;
+	}
+
+	.card-divider {
+		width: 3.5rem;
+		height: 2px;
+		margin: 1rem auto;
+		background: var(--burgundy);
+	}
+
+	.card-arabic {
+		position: relative;
+		margin: 0;
+		color: var(--burgundy-dark);
+		font-size: 1.18rem;
+		font-weight: 800;
+		line-height: 1.75;
+		text-align: center;
+	}
+
+	.card-english {
+		position: relative;
+		margin: 0.35rem 0 1.2rem;
+		color: var(--muted);
+		font-family: Georgia, serif;
+		font-size: 0.75rem;
+		text-align: center;
+	}
+
+	.card-footer {
+		position: relative;
+		display: flex;
+		justify-content: space-between;
+		gap: 0.8rem;
+		padding-top: 0.8rem;
+		border-top: 1px solid rgba(123, 38, 56, 0.15);
+		color: var(--muted);
+		font-size: 0.68rem;
+	}
+
+	.site-footer {
+		display: flex;
+		width: min(100% - 2rem, 88rem);
+		margin: 0 auto;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.9rem 0 1.2rem;
+		border-top: 1px solid rgba(255, 255, 255, 0.16);
+		color: rgba(255, 249, 246, 0.65);
+		font-size: 0.7rem;
+	}
+
+	.site-footer > div {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+	}
+
+	.footer-brand {
+		color: #f0cfd5;
+		font-weight: 800;
+		letter-spacing: 0.08em;
+	}
+
+	.entrance {
+		animation: enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.header-entrance {
+		animation-delay: 50ms;
+	}
+
+	.copy-entrance {
+		animation-delay: 140ms;
+	}
+
+	.card-entrance {
+		animation-delay: 260ms;
+	}
+
+	.footer-entrance {
+		animation-delay: 380ms;
+	}
+
+	@keyframes enter {
+		from {
+			opacity: 0;
+			transform: translateY(1rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes background-breathe {
+		from {
+			transform: scale(1.02);
+		}
+		to {
+			transform: scale(1.07);
+		}
 	}
 
 	.language-control button:focus-visible,
 	.theme-control:focus-visible,
 	.primary-button:focus-visible,
-	.wordmark:focus-visible {
-		outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+	.brand:focus-visible {
+		outline: 3px solid rgba(255, 218, 225, 0.75);
 		outline-offset: 3px;
 	}
 
-	.content-grid {
-		display: grid;
-		flex: 1;
-		grid-template-columns: 1fr;
-		align-items: stretch;
-		gap: 1rem;
-		padding: 1rem 0;
-	}
+	@media (min-width: 760px) {
+		.site-header,
+		.hero-content,
+		.site-footer {
+			width: min(100% - 4rem, 88rem);
+		}
 
-	.welcome-panel,
-	.visual-panel {
-		border: 1px solid var(--border);
-		background: var(--panel);
-		box-shadow: var(--shadow);
-	}
+		.site-header {
+			padding: 1.25rem 0;
+		}
 
-	.welcome-panel {
-		display: flex;
-		min-height: 38rem;
-		flex-direction: column;
-		justify-content: center;
-		padding: 2rem 1.5rem;
-	}
+		.hero-content {
+			grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.75fr);
+			padding: 4rem 0 5rem;
+		}
 
-	.section-label { margin: 0 0 1.25rem; color: var(--accent); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; }
-	h1, p { margin-top: 0; }
+		.welcome-page[dir='rtl'] .hero-brand-card {
+			justify-self: start;
+		}
 
-	h1 {
-		max-width: 33rem;
-		margin-bottom: 1rem;
-		font-size: clamp(1.9rem, 7vw, 3.25rem);
-		font-weight: 700;
-		letter-spacing: -0.035em;
-		line-height: 1.35;
-	}
-
-	.school-details { display: flex; flex-wrap: wrap; align-items: center; gap: 0.65rem; color: var(--muted); font-size: 0.95rem; }
-	.detail-divider { width: 0.28rem; height: 0.28rem; border-radius: 50%; background: var(--accent); }
-
-	.school-message { max-width: 33rem; margin-top: 4.2rem; padding-inline-start: 1rem; border-inline-start: 2px solid var(--accent); }
-	.supporting-text { max-width: 28rem; margin-bottom: 0; color: var(--muted); font-size: 1.05rem; line-height: 1.9; }
-
-	.action-block { width: min(100%, 24rem); margin-top: 2.5rem; }
-
-	.primary-button {
-		display: flex;
-		width: 100%;
-		min-height: 3.7rem;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0.9rem 1.25rem;
-		border: 0;
-		border-radius: 0.7rem;
-		background: var(--accent);
-		box-shadow: 0 9px 18px color-mix(in srgb, var(--accent) 20%, transparent);
-		color: #fff;
-		cursor: pointer;
-		font-size: 1rem;
-		font-weight: 700;
-		text-decoration: none;
-		transition: background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-	}
-
-	.primary-button:hover { background: var(--accent-dark); box-shadow: 0 12px 22px color-mix(in srgb, var(--accent) 25%, transparent); transform: translateY(-1px); }
-	.primary-button:active { box-shadow: 0 5px 12px color-mix(in srgb, var(--accent) 20%, transparent); transform: translateY(1px); }
-	.arrow { font-size: 1.2rem; font-weight: 400; }
-
-	.visual-panel {
-		position: relative;
-		display: flex;
-		min-height: 23rem;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-		background: var(--accent);
-		color: #fff;
-	}
-
-	.grid-lines {
-		position: absolute;
-		inset: 0;
-		opacity: 0.16;
-		background-image: linear-gradient(90deg, transparent 49%, #fff 50%, transparent 51%), linear-gradient(0deg, transparent 49%, #fff 50%, transparent 51%);
-		background-size: 3rem 3rem;
-		mask-image: linear-gradient(135deg, #000, transparent 72%);
-	}
-
-	.emblem-card {
-		position: relative;
-		z-index: 1;
-		display: flex;
-		width: min(76%, 18rem);
-		min-height: 20rem;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		padding: 1.5rem;
-		border: 1px solid rgba(255, 255, 255, 0.45);
-		background: rgba(255, 253, 251, 0.96);
-		box-shadow: 0 18px 35px rgba(55, 16, 26, 0.2);
-		color: #4d252e;
-		text-align: center;
-	}
-
-	.emblem-topline { display: flex; width: 100%; justify-content: space-between; color: var(--accent); font-family: Georgia, serif; font-size: 0.58rem; letter-spacing: 0.09em; }
-	.emblem-rule { width: 100%; margin: 0.8rem 0 1.5rem; border-top: 1px solid #dcc8cb; }
-	.emblem-mark { position: relative; display: flex; width: 5.5rem; height: 3.2rem; align-items: flex-end; justify-content: center; margin-bottom: 1.2rem; border-bottom: 2px solid var(--accent); }
-	.book-page { width: 2.3rem; height: 2.6rem; border: 1px solid var(--accent); background: #f8efef; transform-origin: bottom center; }
-	.page-left { border-radius: 0.2rem 0 0 0.2rem; animation: page-lift 7s ease-in-out 1.1s infinite; }
-	.page-right { border-radius: 0 0.2rem 0.2rem 0; animation: page-lift-right 7s ease-in-out 1.45s infinite; }
-	.book-spine { position: absolute; bottom: 0; width: 1px; height: 2.5rem; background: var(--accent); }
-	.book-line { position: absolute; top: 0.25rem; right: 0.15rem; width: 1.1rem; border-top: 1px solid var(--accent); opacity: 0; animation: line-reveal 7s ease-in-out 1.7s infinite; }
-	.emblem-name { margin-bottom: 0.75rem; font-size: 1.1rem; font-weight: 700; line-height: 1.7; }
-	.emblem-note { margin-bottom: 0; color: #98747a; font-size: 0.82rem; }
-
-	.visual-caption { position: absolute; bottom: 1.5rem; left: 1.5rem; display: flex; align-items: center; gap: 0.6rem; color: rgba(255, 255, 255, 0.78); }
-	.visual-caption p { margin: 0; font-size: 0.72rem; }
-	.caption-line { width: 1.8rem; border-top: 1px solid rgba(255, 255, 255, 0.65); }
-	.page-footer { display: flex; align-items: center; justify-content: center; gap: 0.65rem; padding: 0.2rem 0 1.35rem; color: var(--muted); font-size: 0.72rem; }
-	.footer-mark { color: var(--accent); }
-
-	.entrance { animation: enter 650ms cubic-bezier(0.22, 1, 0.36, 1) both; }
-	.intro-one { animation-delay: 80ms; }
-	.intro-two { animation-delay: 200ms; }
-	.intro-three { animation-delay: 320ms; }
-	.intro-visual { animation-delay: 0ms; }
-
-	@keyframes enter {
-		from { opacity: 0; transform: translateY(0.8rem); }
-		to { opacity: 1; transform: translateY(0); }
-	}
-
-	@keyframes page-lift {
-		0%, 72%, 100% { transform: skewY(-8deg) rotateX(0deg); }
-		82% { transform: skewY(-5deg) rotateX(-18deg) translateY(-0.18rem); }
-	}
-
-	@keyframes page-lift-right {
-		0%, 72%, 100% { transform: skewY(8deg) rotateX(0deg); }
-		82% { transform: skewY(5deg) rotateX(14deg) translateY(-0.14rem); }
-	}
-
-	@keyframes line-reveal {
-		0%, 72%, 100% { opacity: 0; transform: translateX(0); }
-		82% { opacity: 0.8; transform: translateX(-0.35rem); }
-	}
-
-	@media (min-width: 700px) {
-		.page-frame { width: min(100% - 4rem, 90rem); }
-		.page-header { padding: 1.65rem 0; }
-		.content-grid { grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr); gap: 1.25rem; padding: 1.25rem 0; }
-		.welcome-panel { padding: 4rem clamp(2.5rem, 7vw, 6.5rem); }
-		.visual-panel { min-height: 38rem; }
-		.page-footer { justify-content: flex-start; padding-bottom: 1.65rem; }
+		.welcome-page[dir='ltr'] .hero-brand-card {
+			justify-self: end;
+		}
 	}
 
 	@media (min-width: 1100px) {
-		.content-grid { grid-template-columns: minmax(0, 1.2fr) minmax(23rem, 0.8fr); }
-		.visual-panel { min-height: 42rem; }
+		.hero-content {
+			gap: 5rem;
+		}
+
+		.hero-brand-card {
+			width: min(100%, 27rem);
+			padding: 1.5rem;
+		}
+
+		.card-logo {
+			width: 12rem;
+			height: 12rem;
+		}
+	}
+
+	@media (max-width: 650px) {
+		.site-header {
+			align-items: flex-start;
+		}
+
+		.brand-copy small {
+			display: none;
+		}
+
+		.header-controls {
+			gap: 0.4rem;
+		}
+
+		.country-pills {
+			display: none;
+		}
+
+		.language-control {
+			font-size: 0.68rem;
+		}
+
+		.theme-control {
+			width: 2.15rem;
+			height: 2.15rem;
+		}
+
+		.hero-content {
+			padding-top: 2.6rem;
+		}
+
+		h1 {
+			font-size: clamp(2.25rem, 12vw, 3.5rem);
+		}
+
+		.hero-description {
+			font-size: 0.96rem;
+		}
+
+		.hero-actions {
+			align-items: stretch;
+			flex-direction: column;
+		}
+
+		.primary-button {
+			width: 100%;
+		}
+
+		.location-note {
+			justify-content: center;
+		}
+
+		.hero-brand-card {
+			width: min(100%, 20rem);
+		}
+
+		.site-footer {
+			flex-direction: column;
+			align-items: flex-start;
+			padding-bottom: 1rem;
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		*, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+		*,
+		*::before,
+		*::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+		}
 	}
 </style>
