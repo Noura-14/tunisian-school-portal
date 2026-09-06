@@ -1,19 +1,119 @@
 :root {
+	/* =========================================================
+	   TSD — LIGHT THEME
+	   ========================================================= */
+
 	--background: #faf8f5;
 	--surface: #ffffff;
 	--surface-soft: #f5f1ee;
+	--surface-strong: #ffffff;
+
 	--text: #292526;
 	--muted-text: #756c6d;
+
 	--border: #e5deda;
+
 	--primary: #8a1538;
 	--primary-dark: #6f102d;
+
 	--tunisia-red: #e70013;
+
 	--success: #2e7d5b;
 	--warning: #b7791f;
 	--danger: #c62828;
+
 	--shadow: 0 8px 24px rgba(67, 42, 43, 0.08);
+
 	--border-radius: 10px;
+
+	/* =========================================================
+	   APP VARIABLE ALIASES
+	   Existing app pages use these names.
+	   ========================================================= */
+
+	--app-bg: var(--background);
+	--app-surface: var(--surface);
+	--app-surface-soft: var(--surface-soft);
+	--app-surface-strong: var(--surface-strong);
+
+	--app-text: var(--text);
+	--app-muted: var(--muted-text);
+
+	--app-border: var(--border);
+
+	--app-accent: var(--primary);
+	--app-accent-dark: var(--primary-dark);
+	--app-accent-soft: rgba(138, 21, 56, 0.08);
+
+	--app-success: var(--success);
+	--app-warning: var(--warning);
+	--app-danger: var(--danger);
+
+	--app-shadow: var(--shadow);
 }
+
+
+/* =========================================================
+   TSD — DARK THEME
+   Deep charcoal + TSD red.
+   No pink/brown surfaces.
+   ========================================================= */
+
+html.dark,
+html[data-theme='dark'],
+body.dark,
+body[data-theme='dark'] {
+	--background: #0f0f10;
+
+	--surface: #18181b;
+	--surface-soft: #18181b;
+	--surface-strong: #232327;
+
+	--text: #f8fafc;
+	--muted-text: #94a3b8;
+
+	--border: #374151;
+
+	--primary: #b91c3c;
+	--primary-dark: #991b32;
+
+	--tunisia-red: #ef4444;
+
+	--success: #22c55e;
+	--warning: #f59e0b;
+	--danger: #ef4444;
+
+	--shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+
+	/* App aliases */
+
+	--app-bg: #0f0f10;
+	--app-surface: #18181b;
+	--app-surface-soft: #18181b;
+	--app-surface-strong: #232327;
+
+	--app-text: #f8fafc;
+	--app-muted: #94a3b8;
+
+	--app-border: #374151;
+
+	--app-accent: #b91c3c;
+	--app-accent-dark: #991b32;
+	--app-accent-soft: rgba(185, 28, 60, 0.16);
+
+	--app-success: #22c55e;
+	--app-warning: #f59e0b;
+	--app-danger: #ef4444;
+
+	--app-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+
+	color-scheme: dark;
+}
+
+
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
 
 *,
 *::before,
@@ -26,6 +126,13 @@ html {
 	min-height: 100%;
 	overflow-x: hidden;
 	background: var(--background);
+	color-scheme: light;
+	scroll-behavior: smooth;
+}
+
+html.dark,
+html[data-theme='dark'] {
+	color-scheme: dark;
 }
 
 body {
@@ -33,13 +140,54 @@ body {
 	min-width: 320px;
 	min-height: 100dvh;
 	overflow-x: hidden;
+
 	background: var(--background);
 	color: var(--text);
-	font-family: "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+
+	font-family:
+		"Noto Sans Arabic",
+		"Segoe UI",
+		Tahoma,
+		Arial,
+		sans-serif;
+
 	font-size: 16px;
 	line-height: 1.6;
+
 	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+
+	transition:
+		background-color 180ms ease,
+		color 180ms ease;
 }
+
+
+/* =========================================================
+   TYPOGRAPHY
+   ========================================================= */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: var(--text);
+}
+
+p {
+	color: var(--text);
+}
+
+small {
+	color: var(--muted-text);
+}
+
+
+/* =========================================================
+   FORM ELEMENTS
+   ========================================================= */
 
 button,
 input,
@@ -47,6 +195,41 @@ select,
 textarea {
 	font: inherit;
 }
+
+button {
+	color: inherit;
+}
+
+input,
+select,
+textarea {
+	color: var(--text);
+	background: var(--surface);
+}
+
+input::placeholder,
+textarea::placeholder {
+	color: var(--muted-text);
+	opacity: 1;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+	outline: 3px solid color-mix(
+		in srgb,
+		var(--primary) 30%,
+		transparent
+	);
+
+	outline-offset: 2px;
+}
+
+
+/* =========================================================
+   MEDIA
+   ========================================================= */
 
 img,
 svg,
@@ -56,6 +239,195 @@ canvas {
 	max-width: 100%;
 }
 
+img {
+	height: auto;
+}
+
 a {
 	color: inherit;
+}
+
+
+/* =========================================================
+   DARK MODE — COMMON ELEMENTS
+   These prevent browser/default white surfaces from
+   appearing inside the dark theme.
+   ========================================================= */
+
+html.dark body,
+html[data-theme='dark'] body,
+body.dark,
+body[data-theme='dark'] {
+	background: #0f0f10;
+	color: #f8fafc;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea,
+html[data-theme='dark'] input,
+html[data-theme='dark'] select,
+html[data-theme='dark'] textarea,
+body.dark input,
+body.dark select,
+body.dark textarea,
+body[data-theme='dark'] input,
+body[data-theme='dark'] select,
+body[data-theme='dark'] textarea {
+	background-color: #232327;
+	color: #f8fafc;
+	border-color: #374151;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder,
+html[data-theme='dark'] input::placeholder,
+html[data-theme='dark'] textarea::placeholder,
+body.dark input::placeholder,
+body.dark textarea::placeholder,
+body[data-theme='dark'] input::placeholder,
+body[data-theme='dark'] textarea::placeholder {
+	color: #94a3b8;
+}
+
+
+/* =========================================================
+   DARK MODE — SELECTION
+   ========================================================= */
+
+::selection {
+	background: rgba(138, 21, 56, 0.2);
+	color: var(--text);
+}
+
+html.dark ::selection,
+html[data-theme='dark'] ::selection {
+	background: rgba(185, 28, 60, 0.38);
+	color: #ffffff;
+}
+
+
+/* =========================================================
+   DARK MODE — SCROLLBAR
+   ========================================================= */
+
+html.dark,
+html[data-theme='dark'] {
+	scrollbar-color: #374151 #0f0f10;
+}
+
+html.dark ::-webkit-scrollbar,
+html[data-theme='dark'] ::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+html.dark ::-webkit-scrollbar-track,
+html[data-theme='dark'] ::-webkit-scrollbar-track {
+	background: #0f0f10;
+}
+
+html.dark ::-webkit-scrollbar-thumb,
+html[data-theme='dark'] ::-webkit-scrollbar-thumb {
+	background: #374151;
+	border-radius: 999px;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover,
+html[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+	background: #4b5563;
+}
+
+
+/* =========================================================
+   MOBILE TYPOGRAPHY
+   Minimum readable sizes.
+   ========================================================= */
+
+@media (max-width: 600px) {
+	body {
+		font-size: 16px;
+		line-height: 1.65;
+	}
+
+	button,
+	input,
+	select,
+	textarea {
+		font-size: 16px;
+	}
+
+	p {
+		font-size: 16px;
+	}
+
+	small {
+		font-size: 14px;
+	}
+
+	h1 {
+		font-size: clamp(28px, 8vw, 32px);
+		line-height: 1.2;
+	}
+
+	h2 {
+		font-size: 22px;
+		line-height: 1.3;
+	}
+
+	h3 {
+		font-size: 18px;
+		line-height: 1.4;
+	}
+}
+
+
+/* =========================================================
+   VERY SMALL PHONES
+   Keep text readable — reduce spacing, NOT text size.
+   ========================================================= */
+
+@media (max-width: 380px) {
+	body {
+		font-size: 16px;
+	}
+
+	button,
+	input,
+	select,
+	textarea {
+		font-size: 16px;
+	}
+
+	h1 {
+		font-size: 28px;
+	}
+
+	h2 {
+		font-size: 22px;
+	}
+
+	h3 {
+		font-size: 18px;
+	}
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

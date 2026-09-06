@@ -374,7 +374,7 @@
 		background: #e8aebb;
 	}
 
-	h1 {
+	h2 {
 		max-width: 42rem;
 		margin: 0;
 		font-size: clamp(2.4rem, 8vw, 5.6rem);
@@ -693,7 +693,7 @@
 			padding-top: 2.6rem;
 		}
 
-		h1 {
+		h2 {
 			font-size: clamp(2.25rem, 12vw, 3.5rem);
 		}
 
