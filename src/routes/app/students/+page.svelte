@@ -1,6 +1,7 @@
 <script>
 	import { getContext, onMount } from 'svelte';
 	import AppIcon from '$lib/components/AppIcon.svelte';
+    import { supabase } from '$lib/supabase.js';
 	import { classOptions, importedStudents } from '$lib/data/students.js';
 	import { loadAttendance } from '$lib/data/attendance.js';
 	import { loadBehaviorRecords } from '$lib/data/behavior.js';
