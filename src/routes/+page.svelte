@@ -36,13 +36,25 @@
 </script>
 
 <svelte:head>
-	<title>{documentTitle}</title>
+	<title>{documentTitle} | فرع اللقطة</title>
+
 	<meta
 		name="description"
 		content={isArabic
-			? 'المدرسة التونسية بالدوحة، فرع اللقطة، إعدادي و ثانوي'
-			: 'Tunisian School in Doha, Al-Luqta Branch, Preparatory & Secondary'}
+			? 'الموقع الإلكتروني للمدرسة التونسية بالدوحة، فرع اللقطة، للتعليم الإعدادي والثانوي.'
+			: 'Official website of the Tunisian School in Doha, Al-Luqta Branch, serving Preparatory and Secondary students.'}
 	/>
+
+	<meta name="robots" content="index, follow" />
+
+	<meta property="og:title" content={documentTitle} />
+	<meta
+		property="og:description"
+		content={isArabic
+			? 'المدرسة التونسية بالدوحة — فرع اللقطة، إعدادي وثانوي.'
+			: 'Tunisian School in Doha — Al-Luqta Branch, Preparatory & Secondary.'}
+	/>
+	<meta property="og:type" content="website" />
 </svelte:head>
 
 <main class:dark={theme === 'dark'} class="welcome-page" dir={pageDirection}>
