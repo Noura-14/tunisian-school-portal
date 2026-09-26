@@ -1,305 +1,523 @@
 <script>
-	import { getContext, onMount } from 'svelte';
-	import { jsPDF } from 'jspdf';
-	import html2canvas from 'html2canvas';
-	import { classOptions, importedStudents } from '$lib/data/students.js';
-	import { loadAttendance, recordAttendance } from '$lib/data/attendance.js';
+    import { getContext, onMount } from 'svelte';
+    import { jsPDF } from 'jspdf';
+    import html2canvas from 'html2canvas';
+  //  import { supabase } from '$lib/supabase.js';
 
-	const appState = getContext('app-state');
-	const isArabic = $derived(appState.language === 'ar');
+    const appState = getContext('app-state');
+    const isArabic = $derived(appState.language === 'ar');
 
-	let selectedClass = $state(classOptions[0]);
-	let selectedDate = $state(new Date().toISOString().slice(0, 10));
-	let searchTerm = $state('');
-	let attendanceFilter = $state('all');
+    // Classes are fixed — no class CRUD here.
+    const classOptions = [
+        '7ème 1',
+        '7ème 2',
+        '7ème 3',
+        '7ème 4',
+        '7ème 5',
+        '7ème 6',
+        '7ème 7',
+        '7ème 8',
+        '7ème 9',
+        '7ème 10'
+    ];
 
-	/** @type {'name' | 'class'} */
-	let sortBy = $state('name');
-	let sortDescending = $state(false);
+    /** @type {Array<{id: string, firstName: string, lastName: string, className: string}>} */
+    let students = $state([]);
 
-	/** @type {any} */
-	let attendanceData = $state({
-		current: {},
-		history: []
-	});
+    let selectedClass = $state(classOptions[0]);
+    let selectedDate = $state(new Date().toISOString().slice(0, 10));
+    let searchTerm = $state('');
+    let attendanceFilter = $state('all');
 
-	let exportOpen = $state(false);
-	let exportType = $state('all');
-let pdfName = $state('');
-	/** @type {string | null} */
-	let animatingStudentId = $state(null);
+    /** @type {'name' | 'class'} */
+    let sortBy = $state('name');
 
-	onMount(() => {
-		attendanceData = /** @type {typeof attendanceData} */ (loadAttendance());
-	});
+    let sortDescending = $state(false);
 
-	const classStudents = $derived(
-		importedStudents.filter((student) => student.className === selectedClass)
-	);
+    /** @type {{ current: Record<string, any>, history: Array<{id: string, studentId: string, date: string, status: 'present' | 'absent'}> }} */
+    let attendanceData = $state({
+        current: {},
+        history: []
+    });
 
-	const currentRecords = $derived(
-		classStudents.map((student) => ({
-			student,
-			record:
-				attendanceData.history.find(
-					(/** @type {{ id: string, studentId: string, date: string, status: 'present' | 'absent' }} */ item) =>
-						item.studentId === student.id && item.date === selectedDate
-				) || null
-		}))
-	);
+    let exportOpen = $state(false);
+    let exportType = $state('all');
+    let pdfName = $state('');
 
-	const visibleStudents = $derived(
-		currentRecords
-			.filter((/** @type {{ student: any, record: { id: string, studentId: string, date: string, status: 'present' | 'absent' } | null }} */ { student, record }) => {
-				if (record) return false;
-				const query = searchTerm.trim().toLocaleLowerCase();
-				const fullName = `${student.firstName} ${student.lastName}`.toLocaleLowerCase();
-				return !query || fullName.includes(query);
-			})
-			.sort((/** @type {{ record: { id: string, studentId: string, date: string, status: 'present' | 'absent' } | null, student: { id: string, firstName: string, lastName: string, className: string } }} */ left, /** @type {{ record: { id: string, studentId: string, date: string, status: 'present' | 'absent' } | null, student: { id: string, firstName: string, lastName: string, className: string } }} */ right) => {
-				const leftValue =
-					sortBy === 'class'
-						? left.student.className
-						: `${left.student.firstName} ${left.student.lastName}`;
-				const rightValue =
-					sortBy === 'class'
-						? right.student.className
-						: `${right.student.firstName} ${right.student.lastName}`;
-				const comparison = leftValue.localeCompare(rightValue, 'ar');
-				return sortDescending ? -comparison : comparison;
-			})
-	);
+    /** @type {string | null} */
+    let animatingStudentId = $state(null);
 
-	const pendingCount = $derived(
-		currentRecords.filter(({ record }) => record === null).length
-	);
+    let loading = $state(true);
+    let loadingError = $state('');
+async function loadStudents() {
+    try {
+        const response = await fetch('/api/students');
+        const result = await response.json();
 
-	const historyRows = $derived(
-		attendanceData.history
-			.flatMap((/** @type {{ id: string, studentId: string, date: string, status: 'present' | 'absent' }} */ record) => {
-				const student = importedStudents.find(
-					(item) => item.id === record.studentId
-				);
-				return student ? [{ record, student }] : [];
-			})
-			.filter((/** @type {{ record: { id: string, studentId: string, date: string, status: 'present' | 'absent' }, student: any }} */ { record, student }) => {
-				const matchesClass = student.className === selectedClass;
-				const query = searchTerm.trim().toLocaleLowerCase();
-				const fullName = `${student.firstName} ${student.lastName}`.toLocaleLowerCase();
-				const matchesSearch = !query || fullName.includes(query);
-				const matchesFilter =
-					attendanceFilter === 'all' ||
-					(attendanceFilter === 'present' &&
-						record.status === 'present') ||
-					(attendanceFilter === 'absent' &&
-						record.status === 'absent');
-				return matchesClass && matchesSearch && matchesFilter;
-			})
-			.sort(
-				(
-					/** @type {{ record: { id: string, studentId: string, date: string, status: 'present' | 'absent' }, student: any }} */ left,
-					/** @type {{ record: { id: string, studentId: string, date: string, status: 'present' | 'absent' }, student: any }} */ right
-				) =>
-					right.record.date.localeCompare(left.record.date)
-			)
-	);
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to load students');
+        }
 
-	const recordedRecords = $derived(
-		currentRecords.filter(({ record }) => record !== null)
-	);
+        students = Array.isArray(result) ? result.map((student) => ({
+            id: String(student.id),
+            firstName: student.first_name ?? '',
+            lastName: student.last_name ?? '',
+            className: student.class_name ?? ''
+        })) : [];
+    } catch (error) {
+        console.error('Failed to load students:', error);
+        students = [];
+    }
+}
+    async function loadAttendanceFromSupabase() {
+    try {
+        const response = await fetch('/api/attendance');
+        const result = await response.json();
 
-	const presentCount = $derived(
-		recordedRecords.filter(
-			({ record }) => record?.status === 'present'
-		).length
-	);
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to load attendance');
+        }
 
-	const absentCount = $derived(
-		recordedRecords.filter(
-			({ record }) => record?.status === 'absent'
-		).length
-	);
+        const history = Array.isArray(result) ? result : [];
 
-	/** @param {string} studentId @param {'present' | 'absent'} status */
-	function setStatus(studentId, status) {
-		if (animatingStudentId) return;
-		const dateAtClick = selectedDate;
-		animatingStudentId = studentId;
-		window.setTimeout(() => {
-			attendanceData = recordAttendance(
-				attendanceData,
-				studentId,
-				dateAtClick,
-				status
-			);
-			animatingStudentId = null;
-		}, 360);
-	}
+        attendanceData = {
+            current: {},
+            history: history.map((record) => ({
+                id: String(record.id),
+                studentId: String(record.student_id),
+                date: record.date,
+                status: record.status
+            }))
+        };
 
-	/**
-	 * @param {string} studentId
-	 * @param {'present' | 'absent'} status
-	 * @param {string} date
-	 */
-	function editStatus(studentId, status, date) {
-		attendanceData = recordAttendance(
-			attendanceData,
-			studentId,
-			date,
-			status
-		);
-	}
+        // Build the current attendance for the selected date/class
+        for (const record of attendanceData.history) {
+            if (record.date === selectedDate) {
+                attendanceData.current[record.studentId] = record.status;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load attendance:', error);
 
-	function openExport() {
-		pdfName = `Attendance_${selectedClass.replaceAll(' ', '_')}_${selectedDate}`;
-		exportType = 'all';
-		exportOpen = true;
-	}
+        attendanceData = {
+            current: {},
+            history: []
+        };
+    }
+}
 
-	function closeExport() {
-		exportOpen = false;
-	}
+    onMount(async () => {
+        try {
+            loading = true;
+            loadingError = '';
 
-	async function exportPdf() {
-		const records = currentRecords
-			.filter(({ record }) => record !== null)
-			.filter(({ record }) => {
-				if (exportType === 'present') {
-					return record?.status === 'present';
-				}
-				if (exportType === 'absent') {
-					return record?.status === 'absent';
-				}
-				return true;
-			});
+            await Promise.all([
+                loadStudents(),
+                loadAttendanceFromSupabase()
+            ]);
+        } catch (error) {
+            console.error(error);
+            loadingError = isArabic
+                ? 'تعذر تحميل بيانات الحضور. يرجى المحاولة مرة أخرى.'
+                : 'Unable to load attendance data. Please try again.';
+        } finally {
+            loading = false;
+        }
+    });
 
-		if (!records.length) {
-			window.alert(
-				isArabic
-					? 'لا توجد سجلات للتصدير.'
-					: 'There are no attendance records to export.'
-			);
-			return;
-		}
+    const classStudents = $derived(
+        students.filter((student) => student.className === selectedClass)
+    );
 
-		const wrapper = document.createElement('div');
-		wrapper.dir = isArabic ? 'rtl' : 'ltr';
-		wrapper.style.cssText =
-			'position:fixed;left:-10000px;top:0;width:794px;padding:42px;background:white;color:#111;font-family:Arial,sans-serif;';
-		wrapper.innerHTML = `
-			<h1 style="margin:0 0 8px;font-size:24px;">
-				${isArabic ? 'المدرسة التونسية بالدوحة' : 'Tunisian School in Doha'}
-			</h1>
-			<h2 style="margin:0 0 24px;font-size:18px;font-weight:600;">
-				${isArabic ? 'فرع اللقطة — إعدادي وثانوي' : 'Al-Luqta Branch — Middle & Secondary'}
-			</h2>
-			<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;font-size:14px;">
-				<div>
-					<b>${isArabic ? 'القسم' : 'Class'}:</b>
-					${selectedClass}
-				</div>
-				<div>
-					<b>${isArabic ? 'التاريخ' : 'Date'}:</b>
-					${selectedDate}
-				</div>
-			</div>
-			<table style="width:100%;border-collapse:collapse;font-size:13px;">
-				<thead>
-					<tr>
-						<th style="border:1px solid #bbb;padding:8px;text-align:start;">
-							#
-						</th>
-						<th style="border:1px solid #bbb;padding:8px;text-align:start;">
-							${isArabic ? 'التلميذ' : 'Student'}
-						</th>
-						<th style="border:1px solid #bbb;padding:8px;text-align:start;">
-							${isArabic ? 'الحالة' : 'Status'}
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					${records
-						.map(({ student, record }, index) => {
-							if (!record) return '';
-							return `
-								<tr>
-									<td style="border:1px solid #ddd;padding:7px;">
-										${index + 1}
-									</td>
-									<td style="border:1px solid #ddd;padding:7px;">
-										${student.firstName} ${student.lastName}
-									</td>
-									<td style="border:1px solid #ddd;padding:7px;">
-										${
-											record.status === 'present'
-												? isArabic
-													? 'حاضر'
-													: 'Present'
-												: isArabic
-													? 'غائب'
-													: 'Absent'
-										}
-									</td>
-								</tr>
-							`;
-						})
-						.join('')}
-				</tbody>
-			</table>
-		`;
+    const currentRecords = $derived(
+        classStudents.map((student) => ({
+            student,
+            record:
+                attendanceData.history.find(
+                    /** @param {{id: string, studentId: string, date: string, status: 'present' | 'absent'}} item */
+                    (item) =>
+                        item.studentId === student.id &&
+                        item.date === selectedDate
+                ) || null
+        }))
+    );
 
-		document.body.appendChild(wrapper);
+    const visibleStudents = $derived(
+        currentRecords
+            .filter(
+                /** @param {{student: any, record: any}} item */
+                ({ student, record }) => {
+                    if (record) return false;
 
-		try {
-			const canvas = await html2canvas(wrapper, {
-				scale: 2,
-				backgroundColor: '#ffffff'
-			});
-			/** @type {any} */
-			const JsPDFConstructor = jsPDF;
-			const pdf = new JsPDFConstructor({
-				orientation: 'portrait',
-				unit: 'mm',
-				format: 'a4'
-			});
-			const pageWidth = pdf.internal.pageSize.getWidth();
-			const pageHeight = pdf.internal.pageSize.getHeight();
-			const imageWidth = pageWidth - 20;
-			const imageHeight =
-				(canvas.height * imageWidth) / canvas.width;
-			const imageData = canvas.toDataURL('image/png');
-			let y = 10;
-			let remainingHeight = imageHeight;
-			pdf.addImage(
-				imageData,
-				'PNG',
-				10,
-				y,
-				imageWidth,
-				imageHeight
-			);
-			remainingHeight -= pageHeight - 20;
-			while (remainingHeight > 0) {
-				pdf.addPage();
-				y = -(imageHeight - remainingHeight - 10);
-				pdf.addImage(
-					imageData,
-					'PNG',
-					10,
-					y,
-					imageWidth,
-					imageHeight
-				);
-				remainingHeight -= pageHeight - 20;
-			}
-			const finalFileName =
-				pdfName.trim() || `Attendance_${selectedDate}`;
-			pdf.save(`${finalFileName}.pdf`);
-			exportOpen = false;
-		} finally {
-			wrapper.remove();
-		}
-	}
+                    const query = searchTerm.trim().toLocaleLowerCase();
+                    const fullName =
+                        `${student.firstName} ${student.lastName}`.toLocaleLowerCase();
+
+                    return !query || fullName.includes(query);
+                }
+            )
+            .sort(
+                /**
+                 * @param {{student: any, record: any}} left
+                 * @param {{student: any, record: any}} right
+                 */
+                (left, right) => {
+                    const leftValue =
+                        sortBy === 'class'
+                            ? left.student.className
+                            : `${left.student.firstName} ${left.student.lastName}`;
+
+                    const rightValue =
+                        sortBy === 'class'
+                            ? right.student.className
+                            : `${right.student.firstName} ${right.student.lastName}`;
+
+                    const comparison = leftValue.localeCompare(
+                        rightValue,
+                        'ar'
+                    );
+
+                    return sortDescending ? -comparison : comparison;
+                }
+            )
+    );
+
+    const pendingCount = $derived(
+        currentRecords.filter(({ record }) => record === null).length
+    );
+
+    const historyRows = $derived(
+        attendanceData.history
+            .flatMap((record) => {
+                const student = students.find(
+                    (item) => item.id === record.studentId
+                );
+
+                return student ? [{ record, student }] : [];
+            })
+            .filter(({ record, student }) => {
+                const matchesClass =
+                    student.className === selectedClass;
+
+                const query = searchTerm.trim().toLocaleLowerCase();
+
+                const fullName =
+                    `${student.firstName} ${student.lastName}`.toLocaleLowerCase();
+
+                const matchesSearch =
+                    !query || fullName.includes(query);
+
+                const matchesFilter =
+                    attendanceFilter === 'all' ||
+                    (attendanceFilter === 'present' &&
+                        record.status === 'present') ||
+                    (attendanceFilter === 'absent' &&
+                        record.status === 'absent');
+
+                return matchesClass && matchesSearch && matchesFilter;
+            })
+            .sort(
+                (left, right) =>
+                    right.record.date.localeCompare(left.record.date)
+            )
+    );
+
+    const recordedRecords = $derived(
+        currentRecords.filter(({ record }) => record !== null)
+    );
+
+    const presentCount = $derived(
+        recordedRecords.filter(
+            ({ record }) => record?.status === 'present'
+        ).length
+    );
+
+    const absentCount = $derived(
+        recordedRecords.filter(
+            ({ record }) => record?.status === 'absent'
+        ).length
+    );
+
+    /**
+    /**
+ * Save attendance through the server API and update local state.
+ *
+ * @param {string} studentId
+ * @param {'present' | 'absent'} status
+ * @param {string} date
+ */
+async function saveAttendance(studentId, status, date) {
+    try {
+        const response = await fetch('/api/attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                date,
+                status
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to save attendance');
+        }
+
+        const updatedRecord = {
+            id: String(data.id),
+            studentId: String(data.student_id),
+            date: data.date,
+            status: data.status
+        };
+
+        const existingIndex = attendanceData.history.findIndex(
+            (item) =>
+                item.studentId === updatedRecord.studentId &&
+                item.date === updatedRecord.date
+        );
+
+        if (existingIndex === -1) {
+            attendanceData = {
+                ...attendanceData,
+                history: [
+                    ...attendanceData.history,
+                    updatedRecord
+                ]
+            };
+        } else {
+            const updatedHistory = [...attendanceData.history];
+            updatedHistory[existingIndex] = updatedRecord;
+
+            attendanceData = {
+                ...attendanceData,
+                history: updatedHistory
+            };
+        }
+    } catch (error) {
+        console.error('Failed to save attendance:', error);
+
+        window.alert(
+            isArabic
+                ? 'تعذر حفظ الحضور. يرجى المحاولة مرة أخرى.'
+                : 'Unable to save attendance. Please try again.'
+        );
+    }
+}
+    /**
+     * @param {string} studentId
+     * @param {'present' | 'absent'} status
+     */
+    async function setStatus(studentId, status) {
+        if (animatingStudentId) return;
+
+        const dateAtClick = selectedDate;
+        animatingStudentId = studentId;
+
+        window.setTimeout(async () => {
+            await saveAttendance(
+                studentId,
+                status,
+                dateAtClick
+            );
+
+            animatingStudentId = null;
+        }, 360);
+    }
+
+    /**
+     * @param {string} studentId
+     * @param {'present' | 'absent'} status
+     * @param {string} date
+     */
+    async function editStatus(studentId, status, date) {
+        await saveAttendance(studentId, status, date);
+    }
+
+    function openExport() {
+        pdfName = `Attendance_${selectedClass.replaceAll(' ', '_')}_${selectedDate}`;
+        exportType = 'all';
+        exportOpen = true;
+    }
+
+    function closeExport() {
+        exportOpen = false;
+    }
+
+    async function exportPdf() {
+        const records = currentRecords
+            .filter(({ record }) => record !== null)
+            .filter(({ record }) => {
+                if (exportType === 'present') {
+                    return record?.status === 'present';
+                }
+
+                if (exportType === 'absent') {
+                    return record?.status === 'absent';
+                }
+
+                return true;
+            });
+
+        if (!records.length) {
+            window.alert(
+                isArabic
+                    ? 'لا توجد سجلات للتصدير.'
+                    : 'There are no attendance records to export.'
+            );
+
+            return;
+        }
+
+        const wrapper = document.createElement('div');
+
+        wrapper.dir = isArabic ? 'rtl' : 'ltr';
+
+        wrapper.style.cssText =
+            'position:fixed;left:-10000px;top:0;width:794px;padding:42px;background:white;color:#111;font-family:Arial,sans-serif;';
+
+        wrapper.innerHTML = `
+            <h1 style="margin:0 0 8px;font-size:24px;">
+                ${isArabic ? 'المدرسة التونسية بالدوحة' : 'Tunisian School in Doha'}
+            </h1>
+
+            <h2 style="margin:0 0 24px;font-size:18px;font-weight:600;">
+                ${isArabic ? 'فرع اللقطة — إعدادي وثانوي' : 'Al-Luqta Branch — Middle & Secondary'}
+            </h2>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;font-size:14px;">
+                <div>
+                    <b>${isArabic ? 'القسم' : 'Class'}:</b>
+                    ${selectedClass}
+                </div>
+
+                <div>
+                    <b>${isArabic ? 'التاريخ' : 'Date'}:</b>
+                    ${selectedDate}
+                </div>
+            </div>
+
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                    <tr>
+                        <th style="border:1px solid #bbb;padding:8px;text-align:start;">
+                            #
+                        </th>
+
+                        <th style="border:1px solid #bbb;padding:8px;text-align:start;">
+                            ${isArabic ? 'التلميذ' : 'Student'}
+                        </th>
+
+                        <th style="border:1px solid #bbb;padding:8px;text-align:start;">
+                            ${isArabic ? 'الحالة' : 'Status'}
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    ${records
+                        .map(({ student, record }, index) => {
+                            if (!record) return '';
+
+                            return `
+                                <tr>
+                                    <td style="border:1px solid #ddd;padding:7px;">
+                                        ${index + 1}
+                                    </td>
+
+                                    <td style="border:1px solid #ddd;padding:7px;">
+                                        ${student.firstName} ${student.lastName}
+                                    </td>
+
+                                    <td style="border:1px solid #ddd;padding:7px;">
+                                        ${
+                                            record.status === 'present'
+                                                ? isArabic
+                                                    ? 'حاضر'
+                                                    : 'Present'
+                                                : isArabic
+                                                    ? 'غائب'
+                                                    : 'Absent'
+                                        }
+                                    </td>
+                                </tr>
+                            `;
+                        })
+                        .join('')}
+                </tbody>
+            </table>
+        `;
+
+        document.body.appendChild(wrapper);
+
+        try {
+            const canvas = await html2canvas(wrapper, {
+                scale: 2,
+                backgroundColor: '#ffffff'
+            });
+
+            /** @type {any} */
+            const JsPDFConstructor = jsPDF;
+
+            const pdf = new JsPDFConstructor({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            const imageWidth = pageWidth - 20;
+
+            const imageHeight =
+                (canvas.height * imageWidth) / canvas.width;
+
+            const imageData = canvas.toDataURL('image/png');
+
+            let y = 10;
+            let remainingHeight = imageHeight;
+
+            pdf.addImage(
+                imageData,
+                'PNG',
+                10,
+                y,
+                imageWidth,
+                imageHeight
+            );
+
+            remainingHeight -= pageHeight - 20;
+
+            while (remainingHeight > 0) {
+                pdf.addPage();
+
+                y = -(imageHeight - remainingHeight - 10);
+
+                pdf.addImage(
+                    imageData,
+                    'PNG',
+                    10,
+                    y,
+                    imageWidth,
+                    imageHeight
+                );
+
+                remainingHeight -= pageHeight - 20;
+            }
+
+            const finalFileName =
+                pdfName.trim() || `Attendance_${selectedDate}`;
+
+            pdf.save(`${finalFileName}.pdf`);
+
+            exportOpen = false;
+        } finally {
+            wrapper.remove();
+        }
+    }
 </script>
 
 <svelte:head>

@@ -18,8 +18,22 @@
 
     } from '$lib/data/behavior.js';
 
-    import { classOptions, importedStudents } from '$lib/data/students.js';
+const classOptions = [
+    '7ème 1',
+    '7ème 2',
+    '7ème 3',
+    '7ème 4',
+    '7ème 5',
+    '7ème 6',
+    '7ème 7',
+    '7ème 8',
+    '7ème 9',
+    '7ème 10'
+];
 
+let importedStudents = $state(
+    /** @type {{ id: string, firstName: string, lastName: string, className: string }[]} */ ([])
+);
     const appState = getContext('app-state');
 
     const isArabic = $derived(appState.language === 'ar');
@@ -67,25 +81,40 @@
 
     let openStudentId = $state(null);
 
-    onMount(() => {
+   onMount(async () => {
+    records = loadBehaviorRecords();
 
-        records = loadBehaviorRecords();
+    try {
+        const response = await fetch('/api/students');
+        const result = await response.json();
 
-        const requestedStudent = page.url.searchParams.get('student');
-
-        if (requestedStudent) {
-
-            selectedStudentId = requestedStudent;
-
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to load students');
         }
 
-        if (page.url.searchParams.get('action') === 'add') {
+        importedStudents = Array.isArray(result)
+            ? result.map((student) => ({
+                  id: String(student.id),
+                  firstName: student.first_name ?? '',
+                  lastName: student.last_name ?? '',
+                  className: student.class_name ?? ''
+              }))
+            : [];
+    } catch (error) {
+        console.error('Failed to load students:', error);
+        importedStudents = [];
+    }
 
-            activeModal = 'form';
+    const requestedStudent = page.url.searchParams.get('student');
 
-        }
+    if (requestedStudent) {
+        selectedStudentId = requestedStudent;
+    }
 
-    });
+    if (page.url.searchParams.get('action') === 'add') {
+        activeModal = 'form';
+    }
+});
 
     const selectedStudent = $derived(
 

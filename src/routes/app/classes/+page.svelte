@@ -1,12 +1,50 @@
 <script>
 	import AppIcon from '$lib/components/AppIcon.svelte';
-	import { classOptions, importedStudents } from '$lib/data/students.js';
+	import { onMount } from 'svelte';
+	//import { classOptions, importedStudents } from '$lib/data/students.js';
 	import { getContext } from 'svelte';
 
 	const appState = getContext('app-state');
 	const isArabic = $derived(appState.language === 'ar');
+const classOptions = [
+    '7ème 1',
+    '7ème 2',
+    '7ème 3',
+    '7ème 4',
+    '7ème 5',
+    '7ème 6',
+    '7ème 7',
+    '7ème 8',
+    '7ème 9',
+    '7ème 10'
+];
+let students = $state(
+    /** @type {{ id: string, firstName: string, lastName: string, className: string }[]} */ ([])
+);
 
-	let classes = $state([...classOptions]);
+onMount(async () => {
+    try {
+        const response = await fetch('/api/students');
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to load students');
+        }
+
+        students = Array.isArray(result)
+            ? result.map((student) => ({
+                  id: String(student.id),
+                  firstName: student.first_name ?? '',
+                  lastName: student.last_name ?? '',
+                  className: student.class_name ?? ''
+              }))
+            : [];
+    } catch (error) {
+        console.error('Failed to load students:', error);
+        students = [];
+    }
+});
+let classes = $state([...classOptions]);
 
 	/** @type {'add' | null} */
 	let activeModal = $state(null);
@@ -21,10 +59,10 @@
 
 	/** @param {string} className */
 	function studentCount(className) {
-		return importedStudents.filter(
-			(student) => student.className === className
-		).length;
-	}
+    return students.filter(
+        (student) => student.className === className
+    ).length;
+}
 
 	function closeModal() {
 		activeModal = null;

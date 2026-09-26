@@ -3,7 +3,7 @@
 	import AppIcon from '$lib/components/AppIcon.svelte';
 	import { loadAttendance } from '$lib/data/attendance.js';
 	import { temporaryNotifications } from '$lib/data/school.js';
-	import { importedStudents } from '$lib/data/students.js';
+//	import { importedStudents } from '$lib/data/students.js';
 
 	const appState = getContext('app-state');
 	const isArabic = $derived(appState.language === 'ar');

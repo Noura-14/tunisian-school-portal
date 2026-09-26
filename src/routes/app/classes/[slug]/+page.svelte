@@ -25,9 +25,8 @@
 	let sortBy = $state('firstName');
 	let sortDescending = $state(false);
 
-	/** @type {{ current: Record<string, 'present' | 'absent'>, history: Array<{ id: string, studentId: string, date: string, session: number, status: 'present' | 'absent', recordedAt: string }> }} */
-	let attendanceData = $state({ current: {}, history: [] });
-
+/** @type {{ current: Record<string, 'present' | 'absent'>, history: Array<{ id: string, studentId: string, date: string, status: 'present' | 'absent' }> }} */
+let attendanceData = $state({ current: {}, history: [] });
 	let selectedSession = $state(1);
 	let selectedDate = $state(new Date().toISOString().slice(0, 10));
 
@@ -47,13 +46,36 @@
 		selectedStudent || { id: '', firstName: '', lastName: '', className }
 	);
 
-	onMount(() => {
-		students = importedStudents
-			.filter((student) => student.className === className)
-			.map((student) => ({ ...student }));
 
-attendanceData = /** @type {any} */ (loadAttendance());		behaviorRecords = loadBehaviorRecords();
-	});
+onMount(async () => {
+    try {
+        const response = await fetch('/api/students');
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to load students');
+        }
+
+        students = Array.isArray(result)
+            ? result
+                  .map((student) => ({
+                      id: String(student.id),
+                      firstName: student.first_name ?? '',
+                      lastName: student.last_name ?? '',
+                      className: student.class_name ?? ''
+                  }))
+                  .filter((student) => student.className === className)
+            : [];
+    } catch (error) {
+        console.error('Failed to load students:', error);
+        students = [];
+    }
+
+
+	behaviorRecords = loadBehaviorRecords();
+});
+
+
 
 	const visibleStudents = $derived(
 		students
@@ -67,11 +89,10 @@ attendanceData = /** @type {any} */ (loadAttendance());		behaviorRecords = loadB
 						.includes(query);
 
 				const status = attendanceData.history.find(
-					(record) =>
-						record.studentId === student.id &&
-						record.date === selectedDate &&
-						record.session === Number(selectedSession)
-				)?.status;
+    (record) =>
+        record.studentId === student.id &&
+        record.date === selectedDate
+)?.status;
 
 				const matchesAttendance =
 					attendanceFilter === 'all' ||
@@ -92,37 +113,74 @@ attendanceData = /** @type {any} */ (loadAttendance());		behaviorRecords = loadB
 				attendanceData.history.find(
 					(record) =>
 						record.studentId === student.id &&
-						record.date === selectedDate &&
-						record.session === Number(selectedSession)
+						record.date === selectedDate 
+						//record.session === Number(selectedSession)
 				)?.status === 'present'
 		).length
 	);
 
 	const absentCount = $derived(
-		students.filter(
-			(student) =>
-				attendanceData.history.find(
-					(record) =>
-						record.studentId === student.id &&
-						record.date === selectedDate &&
-						record.session === Number(selectedSession)
-				)?.status === 'absent'
-		).length
-	);
+    students.filter(
+        (student) =>
+            attendanceData.history.find(
+                (record) =>
+                    record.studentId === student.id &&
+                    record.date === selectedDate
+            )?.status === 'absent'
+    ).length
+);
 
 	const unrecordedCount = $derived(
 		Math.max(students.length - presentCount - absentCount, 0)
 	);
 
 	/** @param {string} studentId @param {'present' | 'absent'} status */
-	function setAttendance(studentId, status) {
-		attendanceData = recordAttendance(
-			attendanceData,
-			studentId,
-			selectedDate,
-			status
-		);
-	}
+async function setAttendance(studentId, status) {
+    try {
+        const response = await fetch('/api/attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                date: selectedDate,
+                status
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || 'Failed to save attendance');
+        }
+
+        const updatedRecord = {
+            id: String(result.id),
+            studentId: String(result.student_id),
+            date: result.date,
+            status: result.status
+        };
+
+        attendanceData.history = attendanceData.history.filter(
+            (record) =>
+                !(
+                    record.studentId === updatedRecord.studentId &&
+                    record.date === updatedRecord.date
+                )
+        );
+
+        attendanceData.history.push(updatedRecord);
+    } catch (error) {
+        console.error('Failed to save attendance:', error);
+
+        window.alert(
+            isArabic
+                ? 'تعذر حفظ الحضور. يرجى المحاولة مرة أخرى.'
+                : 'Unable to save attendance. Please try again.'
+        );
+    }
+}
 
 	/** @param {number} level */
 	function behaviorLabel(level) {
@@ -459,12 +517,11 @@ attendanceData = /** @type {any} */ (loadAttendance());		behaviorRecords = loadB
 
 				<tbody>
 					{#each visibleStudents as student, index (student.id)}
-						{@const currentStatus = attendanceData.history.find(
-							(record) =>
-								record.studentId === student.id &&
-								record.date === selectedDate &&
-								record.session === Number(selectedSession)
-						)?.status}
+					{@const currentStatus = attendanceData.history.find(
+    (record) =>
+        record.studentId === student.id &&
+        record.date === selectedDate
+)?.status}
 
 						{@const alertLevel = getStudentAlertLevel(behaviorRecords, student.id)}
 
