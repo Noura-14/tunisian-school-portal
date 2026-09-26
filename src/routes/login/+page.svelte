@@ -318,15 +318,6 @@
 								</div>
 							{/if}
 
-							<div class="form-options">
-								<a
-									href="/login"
-									onclick={(event) => event.preventDefault()}
-								>
-									{isArabic ? 'نسيت كلمة المرور؟' : 'Forgot password?'}
-								</a>
-							</div>
-
 							<button
 								class="submit-button"
 								type="submit"
@@ -353,34 +344,6 @@
 								{/if}
 							</button>
 						</form>
-
-						<!-- DEVELOPMENT ACCOUNT -->
-						<div class="development-account">
-							<div class="development-title">
-								<span class="development-dot"></span>
-								<strong>
-									{isArabic ? 'حساب التطوير' : 'Development Account'}
-								</strong>
-							</div>
-
-							<p>
-								{isArabic
-									? 'للاستخدام أثناء تطوير المشروع فقط.'
-									: 'For development use only.'}
-							</p>
-
-							<div class="credentials">
-								<span>
-									{isArabic ? 'اسم المستخدم' : 'Username'}:
-									<code>admin</code>
-								</span>
-
-								<span>
-									{isArabic ? 'كلمة المرور' : 'Password'}:
-									<code>admin123</code>
-								</span>
-							</div>
-						</div>
 					{/if}
 				</div>
 			</section>
@@ -871,23 +834,7 @@
 		line-height: 1.5;
 	}
 
-	.form-options {
-		display: flex;
-		justify-content: flex-start;
-		margin-top: -0.2rem;
-	}
-
-	.form-options a {
-		color: var(--burgundy);
-		font-size: 0.8rem;
-		font-weight: 650;
-		text-decoration: none;
-	}
-
-	.form-options a:hover {
-		text-decoration: underline;
-	}
-
+	
 	.submit-button {
 		display: flex;
 		width: 100%;
@@ -957,51 +904,7 @@
 		animation-delay: 280ms;
 	}
 
-	/* DEVELOPMENT */
 
-	.development-account {
-		margin-top: 1.15rem;
-		padding: 0.85rem;
-		border: 1px dashed color-mix(in srgb, var(--burgundy) 28%, var(--border));
-		border-radius: 0.7rem;
-		background: color-mix(in srgb, var(--burgundy) 3%, var(--surface));
-	}
-
-	.development-title {
-		display: flex;
-		align-items: center;
-		gap: 0.45rem;
-		color: var(--burgundy);
-		font-size: 0.78rem;
-	}
-
-	.development-dot {
-		width: 0.42rem;
-		height: 0.42rem;
-		border-radius: 50%;
-		background: var(--burgundy);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--burgundy) 10%, transparent);
-	}
-
-	.development-account p {
-		margin: 0.45rem 0 0.7rem;
-		color: var(--muted);
-		font-size: 0.73rem;
-	}
-
-	.credentials {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.3rem 1rem;
-		color: var(--muted);
-		font-size: 0.7rem;
-	}
-
-	.credentials code {
-		color: var(--text);
-		font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-		font-size: 0.7rem;
-	}
 
 	/* EDUCATION PANEL */
 
@@ -1396,7 +1299,6 @@
 	.theme-button:focus-visible,
 	.password-toggle:focus-visible,
 	.submit-button:focus-visible,
-	.form-options a:focus-visible,
 	.login-footer a:focus-visible,
 	.brand:focus-visible {
 		outline: 3px solid color-mix(in srgb, var(--burgundy) 25%, transparent);

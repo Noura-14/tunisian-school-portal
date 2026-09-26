@@ -387,14 +387,15 @@
 	}
 
 	h2 {
-		max-width: 42rem;
-		margin: 0;
-		font-size: clamp(2.4rem, 8vw, 5.6rem);
-		font-weight: 760;
-		letter-spacing: -0.045em;
-		line-height: 1.2;
-		text-wrap: balance;
-	}
+	max-width: 42rem;
+	margin: 0;
+	color: white;
+	font-size: clamp(2.4rem, 8vw, 5.6rem);
+	font-weight: 760;
+	letter-spacing: -0.045em;
+	line-height: 1.2;
+	text-wrap: balance;
+}
 
 	.hero-description {
 		max-width: 38rem;

@@ -1,9 +1,8 @@
 <script>
 	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
-	import { getContext, onMount, setContext } from 'svelte';
-	import AppIcon from '$lib/components/AppIcon.svelte';
-	import { clearAuthenticatedUser, getAuthenticatedUser } from '$lib/auth.js';
+import { goto } from '$app/navigation';
+import { getContext, onMount, setContext } from 'svelte';
+import AppIcon from '$lib/components/AppIcon.svelte';
 
 	let { children } = $props();
 
@@ -33,22 +32,39 @@
 	const currentUser = $derived(appState.user);
 
 	onMount(() => {
-		const savedTheme = window.localStorage.getItem('school-theme');
-		appState.theme = savedTheme === 'dark' ? 'dark' : 'light';
-		appState.user = getAuthenticatedUser();
-		appState.ready = true;
-		document.documentElement.lang = appState.language;
-		document.documentElement.dir = direction;
+	const savedTheme = window.localStorage.getItem('school-theme');
+	appState.theme = savedTheme === 'dark' ? 'dark' : 'light';
 
-		if (!appState.user) {
+	document.documentElement.lang = appState.language;
+	document.documentElement.dir = direction;
+
+	async function checkSession() {
+		try {
+			const response = await fetch('/api/auth/session');
+			const result = await response.json();
+
+			if (response.ok && result.authenticated) {
+				appState.user = result.user;
+			} else {
+				appState.user = null;
+				goto('/login');
+			}
+		} catch (error) {
+			console.error('Session check failed:', error);
+			appState.user = null;
 			goto('/login');
+		} finally {
+			appState.ready = true;
 		}
+	}
 
-		return () => {
-			document.documentElement.lang = 'ar';
-			document.documentElement.dir = 'rtl';
-		};
-	});
+	checkSession();
+
+	return () => {
+		document.documentElement.lang = 'ar';
+		document.documentElement.dir = 'rtl';
+	};
+});
 
 	/** @param {'ar' | 'en'} nextLanguage */
 	function setLanguage(nextLanguage) {
@@ -78,12 +94,20 @@
 		}
 	}
 
-	function signOut() {
-		clearAuthenticatedUser();
+async function signOut() {
+	try {
+		await fetch('/api/auth/logout', {
+			method: 'POST'
+		});
+	} catch (error) {
+		console.error('Logout error:', error);
+	} finally {
 		appState.user = null;
 		closeDrawer();
 		goto('/login');
 	}
+}
+
 </script>
 
 <svelte:head>

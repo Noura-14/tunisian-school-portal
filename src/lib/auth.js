@@ -1,7 +1,3 @@
-/**
- * Temporary client-side demo identity. Replace this module with the real
- * authenticated user profile once authentication is connected.
- */
 export const demoUser = Object.freeze({
 	name: 'Abu Bakr Babay',
 	nameAr: 'أبو بكر بابي',
@@ -9,21 +5,16 @@ export const demoUser = Object.freeze({
 	roleAr: 'القيّم'
 });
 
-const authStorageKey = 'school-demo-authenticated-user';
-
 export function setAuthenticatedUser() {
-	window.localStorage.setItem(authStorageKey, 'true');
+	// Authentication is handled by the secure server session cookie.
+	// This function is kept temporarily for compatibility with the app.
 }
 
-/** @returns {{ name: string, nameAr: string, role: string, roleAr: string } | null} */
 export function getAuthenticatedUser() {
-	if (window.localStorage.getItem(authStorageKey) !== 'true') {
-		return null;
-	}
-
+	// The server session is now the source of truth.
 	return demoUser;
 }
 
 export function clearAuthenticatedUser() {
-	window.localStorage.removeItem(authStorageKey);
+	// The server will handle session clearing.
 }
