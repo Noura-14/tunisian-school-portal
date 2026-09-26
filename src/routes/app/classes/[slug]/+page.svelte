@@ -4,7 +4,20 @@
 	import AppIcon from '$lib/components/AppIcon.svelte';
 	import { loadAttendance, recordAttendance } from '$lib/data/attendance.js';
 	import { getStudentAlertLevel, getStudentRecords, loadBehaviorRecords, saveBehaviorRecords } from '$lib/data/behavior.js';
-	import { classOptions, importedStudents } from '$lib/data/students.js';
+
+const classOptions = [
+    '7ème 1',
+    '7ème 2',
+    '7ème 3',
+    '7ème 4',
+    '7ème 5',
+    '7ème 6',
+    '7ème 7',
+    '7ème 8',
+    '7ème 9',
+    '7ème 10'
+];
+
 
 	const appState = getContext('app-state');
 	const isArabic = $derived(appState.language === 'ar');

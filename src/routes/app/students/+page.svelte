@@ -2,7 +2,23 @@
 	import { getContext, onMount } from 'svelte';
 	import AppIcon from '$lib/components/AppIcon.svelte';
     import { supabase } from '$lib/supabase.js';
-	import { classOptions, importedStudents } from '$lib/data/students.js';
+	const classOptions = [
+    '7ème 1',
+    '7ème 2',
+    '7ème 3',
+    '7ème 4',
+    '7ème 5',
+    '7ème 6',
+    '7ème 7',
+    '7ème 8',
+    '7ème 9',
+    '7ème 10'
+];
+
+let importedStudents = $state(
+    /** @type {{ id: string, firstName: string, lastName: string, className: string }[]} */ ([])
+);
+	//import { classOptions, importedStudents } from '$lib/data/students.js';
 	import { loadAttendance } from '$lib/data/attendance.js';
 	import { loadBehaviorRecords } from '$lib/data/behavior.js';
 
@@ -10,7 +26,8 @@
 	const isArabic = $derived(appState.language === 'ar');
 	/** @typedef {{ id: string, firstName: string, lastName: string, className: string }} Student */
 
-	let students = $state(importedStudents.map((student) => ({ ...student })));
+	let students = $derived(importedStudents.map((student) => ({ ...student })));
+	//let students = $state(importedStudents.map((student) => ({ ...student })));
 	let searchTerm = $state('');
 	let selectedClass = $state('all');
 	/** @type {'form' | 'view' | 'delete' | null} */
@@ -128,7 +145,22 @@ const objectValue = /** @type {Record<string, unknown>} */ (value);
 	const totalLateToday = $derived(importedStudents.filter((student) => getStudentAttendance(student.id).today === 'late').length);
 	const totalBehaviourAlerts = $derived(behaviorRecords.length);
 
-	onMount(() => {
+	onMount(async() => {
+       const response = await fetch('/api/students');
+const result = await response.json();
+
+if (!response.ok) {
+    throw new Error(result.error || 'Failed to load students');
+}
+
+importedStudents = Array.isArray(result)
+    ? result.map((student) => ({
+          id: String(student.id),
+          firstName: student.first_name ?? '',
+          lastName: student.last_name ?? '',
+          className: student.class_name ?? ''
+      }))
+    : [];
 		try {
 			attendanceRecords = loadAttendance() || {};
 		} catch {
