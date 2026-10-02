@@ -8,11 +8,10 @@ import AppIcon from '$lib/components/AppIcon.svelte';
 
 	const navigationItems = [
 		{ href: '/app', icon: 'home', ar: 'الرئيسية', en: 'Home' },
-		{ href: '/app/students', icon: 'students', ar: 'التلاميذ', en: 'Students' },
 		{ href: '/app/classes', icon: 'classes', ar: 'الأقسام', en: 'Classes' },
-		{ href: '/app/attendance', icon: 'attendance', ar: 'الحضور', en: 'Attendance' },
+		{ href: '/app/absences', icon: 'attendance', ar: 'الغيابات', en: 'Absences' },
 		{ href: '/app/behaviour', icon: 'notifications', ar: 'السلوك', en: 'Behaviour' },
-		{ href: '/app/settings', icon: 'settings', ar: 'الإعدادات', en: 'Settings' }
+		{ href: '/app/history', icon: 'attendance', ar: 'السجل', en: 'History' }
 	];
 
 	/** @type {{ language: 'ar' | 'en', theme: 'light' | 'dark', user: { name: string, nameAr: string, role: string, roleAr: string } | null, ready: boolean, drawerOpen: boolean }} */
@@ -21,7 +20,7 @@ import AppIcon from '$lib/components/AppIcon.svelte';
 		theme: 'light',
 		user: null,
 		ready: false,
-		drawerOpen: false
+		drawerOpen: false,
 	});
 
 	setContext('app-state', appState);
@@ -239,20 +238,6 @@ async function signOut() {
 						</span>
 					</div>
 				</div>
-
-				<div class="sidebar-rule"></div>
-
-				<button
-					class="sign-out"
-					type="button"
-					onclick={signOut}
-				>
-					<AppIcon name="logout" size={18} />
-
-					<span>
-						{isArabic ? 'تسجيل الخروج' : 'Sign out'}
-					</span>
-				</button>
 			</div>
 		</aside>
 
@@ -381,21 +366,11 @@ async function signOut() {
 						{/if}
 					</button>
 
-					<div class="profile-summary">
-						<div class="profile-avatar">
-							{isArabic ? 'أ' : 'A'}
-						</div>
-
-						<div class="profile-text">
-							<strong>
-								{isArabic ? currentUser.nameAr : currentUser.name}
-							</strong>
-
-							<small>
-								{isArabic ? currentUser.roleAr : currentUser.role}
-							</small>
-						</div>
+					<div class="profile-identity" aria-label={`${isArabic ? currentUser.nameAr : currentUser.name}, ${isArabic ? currentUser.roleAr : currentUser.role}`}>
+						<div class="profile-avatar" aria-hidden="true">{isArabic ? 'أ' : 'A'}</div>
+						<div class="profile-text"><strong>{isArabic ? currentUser.nameAr : currentUser.name}</strong><small>{isArabic ? currentUser.roleAr : currentUser.role}</small></div>
 					</div>
+					<button class="logout-button" type="button" aria-label={isArabic ? 'تسجيل الخروج' : 'Sign out'} title={isArabic ? 'تسجيل الخروج' : 'Sign out'} onclick={signOut}><AppIcon name="logout" size={18} /></button>
 				</div>
 			</header>
 
@@ -511,51 +486,6 @@ async function signOut() {
 		height: 2.9rem;
 		flex: 0 0 2.9rem;
 		place-items: center;
-		overflow: hidden;
-		border: 1px solid var(--app-border);
-		border-radius: 0.7rem;
-		background: #ffffff;
-	}
-
-	.sidebar-logo img {
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-		padding: 0.18rem;
-	}
-
-	.sidebar-brand-text {
-		display: flex;
-		min-width: 0;
-		flex-direction: column;
-		gap: 0.2rem;
-		line-height: 1.25;
-	}
-
-	.sidebar-brand-text strong {
-		font-size: 0.78rem;
-		font-weight: 800;
-	}
-
-	.sidebar-brand-text span {
-		color: var(--app-muted);
-		font-size: 0.66rem;
-	}
-
-	.drawer-close {
-		display: grid;
-		width: 2.2rem;
-		height: 2.2rem;
-		flex: 0 0 2.2rem;
-		place-items: center;
-		border: 1px solid var(--app-border);
-		border-radius: 0.55rem;
-		background: var(--app-surface-soft);
-		color: var(--app-muted);
-		cursor: pointer;
-	}
-
-	.drawer-close svg {
 		width: 1rem;
 		height: 1rem;
 	}
@@ -707,35 +637,6 @@ async function signOut() {
 		font-size: 0.66rem;
 	}
 
-	.sidebar-rule {
-		margin: 0.85rem 0;
-		border-top: 1px solid var(--app-border);
-	}
-
-	.sign-out {
-		display: flex;
-		width: 100%;
-		min-height: 2.8rem;
-		align-items: center;
-		gap: 0.7rem;
-		padding: 0.65rem 0.7rem;
-		border: 1px solid transparent;
-		border-radius: 0.6rem;
-		background: transparent;
-		color: var(--app-muted);
-		cursor: pointer;
-		font: inherit;
-		font-size: 0.88rem;
-		text-align: start;
-		transition:
-			background-color 170ms ease,
-			color 170ms ease;
-	}
-
-	.sign-out:hover {
-		background: var(--app-accent-soft);
-		color: var(--app-accent);
-	}
 
 	/* ================================
 	   BACKDROP
@@ -930,13 +831,14 @@ async function signOut() {
 		transform: translateY(-1px);
 	}
 
-	.profile-summary {
+	.profile-identity {
 		display: flex;
 		align-items: center;
 		gap: 0.55rem;
-		padding-inline-start: 0.85rem;
-		border-inline-start: 1px solid var(--app-border);
+		color: var(--app-text);
 	}
+	.logout-button { display:grid; width:2.35rem; height:2.35rem; flex:0 0 2.35rem; place-items:center; border:1px solid transparent; border-radius:.5rem; background:transparent; color:var(--app-muted); cursor:pointer; }
+	.logout-button:hover { background:var(--app-accent-soft); color:var(--app-accent); }
 
 	.profile-avatar {
 		display: grid;
@@ -995,7 +897,7 @@ async function signOut() {
 	.menu-button:focus-visible,
 	.sidebar-brand-link:focus-visible,
 	.header-brand:focus-visible,
-	.sign-out:focus-visible {
+	.logout-button:focus-visible {
 		outline: 3px solid color-mix(in srgb, var(--app-accent) 30%, transparent);
 		outline-offset: 3px;
 	}
@@ -1006,15 +908,23 @@ async function signOut() {
 
 	@media (max-width: 699px) {
 		.application-header {
-			min-height: 4rem;
-			padding: 0 0.75rem;
-			gap: 0.55rem;
+			display: grid;
+			grid-template-columns: auto minmax(0, 1fr);
+			grid-template-areas: 'menu brand' 'actions actions';
+			min-height: 0;
+			gap: 0.35rem 0.55rem;
+			padding: 0.5rem 0.65rem;
 		}
 
+		.menu-button { grid-area: menu; }
+
 		.header-brand {
-			flex: 1;
-			justify-content: center;
+			grid-area: brand;
+			justify-content: flex-start;
+			gap: 0.5rem;
 		}
+
+		.header-spacer { display: none; }
 
 		.header-logo {
 			width: 2.25rem;
@@ -1023,24 +933,34 @@ async function signOut() {
 		}
 
 		.header-school {
-			max-width: 12rem;
+			max-width: none;
 		}
 
 		.header-school strong {
-			font-size: 0.72rem;
+			font-size: 0.84rem;
+			line-height: 1.3;
+			white-space: normal;
 		}
 
 		.header-school span {
-			font-size: 0.6rem;
+			font-size: 0.75rem;
+			display: block;
 		}
 
 		.header-actions {
-			gap: 0.4rem;
+			grid-area: actions;
+			justify-content: space-between;
+			gap: 0.45rem;
+			padding-top: 0.35rem;
+			border-top: 1px solid var(--app-border);
 		}
 
 		.language-control {
-			display: none;
+			display: flex;
+			gap: 0.25rem;
+			font-size: 1rem;
 		}
+		.language-control button { min-height: 2.2rem; padding: 0.35rem 0.25rem; font-size: 1rem; }
 
 		.theme-button {
 			width: 2.25rem;
@@ -1048,14 +968,11 @@ async function signOut() {
 			flex-basis: 2.25rem;
 		}
 
-		.profile-summary {
-			padding-inline-start: 0.4rem;
-			border-inline-start: 0;
-		}
-
 		.profile-text {
-			display: none;
+			display: flex;
 		}
+		.profile-text strong { font-size: 0.85rem; }
+		.profile-text small { font-size: 0.72rem; }
 
 		.profile-avatar {
 			width: 2.25rem;
@@ -1075,15 +992,15 @@ async function signOut() {
 
 	@media (max-width: 420px) {
 		.header-school {
-			max-width: 9.5rem;
+			max-width: none;
 		}
 
 		.header-school strong {
-			font-size: 0.66rem;
+			font-size: 0.8rem;
 		}
 
 		.header-school span {
-			display: none;
+			display: block;
 		}
 	}
 

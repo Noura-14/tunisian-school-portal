@@ -1,8 +1,8 @@
 <script>
 	import { page } from '$app/state';
 	import { getContext, onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import AppIcon from '$lib/components/AppIcon.svelte';
-	import { loadAttendance, recordAttendance } from '$lib/data/attendance.js';
 	import { getStudentAlertLevel, getStudentRecords, loadBehaviorRecords, saveBehaviorRecords } from '$lib/data/behavior.js';
 
 const classOptions = [
@@ -40,8 +40,11 @@ const classOptions = [
 
 /** @type {{ current: Record<string, 'present' | 'absent'>, history: Array<{ id: string, studentId: string, date: string, status: 'present' | 'absent' }> }} */
 let attendanceData = $state({ current: {}, history: [] });
-	let selectedSession = $state(1);
-	let selectedDate = $state(new Date().toISOString().slice(0, 10));
+	function todayKey() {
+		const date = new Date();
+		return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+	}
+	const selectedDate = todayKey();
 
 	/** @type {Array<{ id: string, studentId: string, behaviorTypes: string[], otherBehavior: string, notes: string, summary: string, createdAt: string }>} */
 	let behaviorRecords = $state([]);
@@ -62,12 +65,21 @@ let attendanceData = $state({ current: {}, history: [] });
 
 onMount(async () => {
     try {
-        const response = await fetch('/api/students');
-        const result = await response.json();
+		const [response, attendanceResponse] = await Promise.all([
+			fetch('/api/students'),
+			fetch('/api/attendance')
+		]);
+		const [result, attendanceResult] = await Promise.all([
+			response.json(),
+			attendanceResponse.json()
+		]);
 
         if (!response.ok) {
             throw new Error(result.error || 'Failed to load students');
         }
+		if (!attendanceResponse.ok) {
+			throw new Error(attendanceResult.error || 'Failed to load attendance');
+		}
 
         students = Array.isArray(result)
             ? result
@@ -79,6 +91,15 @@ onMount(async () => {
                   }))
                   .filter((student) => student.className === className)
             : [];
+
+		attendanceData.history = Array.isArray(attendanceResult)
+			? attendanceResult.map((record) => ({
+					id: String(record.id),
+					studentId: String(record.student_id),
+					date: String(record.date).slice(0, 10),
+					status: record.status
+				}))
+			: [];
     } catch (error) {
         console.error('Failed to load students:', error);
         students = [];
@@ -90,35 +111,26 @@ onMount(async () => {
 
 
 
-	const visibleStudents = $derived(
-		students
-			.filter((student) => {
-				const query = searchTerm.trim().toLocaleLowerCase();
+	/** @param {string} studentId */
+	function statusForStudent(studentId) {
+		return attendanceData.history.find((record) => record.studentId === studentId && record.date === selectedDate)?.status || '';
+	}
 
-				const matchesSearch =
-					!query ||
-					`${student.firstName} ${student.lastName}`
-						.toLocaleLowerCase()
-						.includes(query);
+	const matchingStudents = $derived(students.filter((student) => {
+		const query = searchTerm.trim().toLocaleLowerCase();
+		const matchesSearch = !query || `${student.firstName} ${student.lastName}`.toLocaleLowerCase().includes(query);
+		const status = statusForStudent(student.id);
+		const matchesAttendance = attendanceFilter === 'all' || status === attendanceFilter;
+		return matchesSearch && matchesAttendance;
+	}).sort((left, right) => {
+		const comparison = left[sortBy].localeCompare(right[sortBy], 'ar');
+		return sortDescending ? -comparison : comparison;
+	}));
 
-				const status = attendanceData.history.find(
-    (record) =>
-        record.studentId === student.id &&
-        record.date === selectedDate
-)?.status;
-
-				const matchesAttendance =
-					attendanceFilter === 'all' ||
-					(attendanceFilter === 'present' && status === 'present') ||
-					(attendanceFilter === 'absent' && status === 'absent');
-
-				return matchesSearch && matchesAttendance;
-			})
-			.sort((left, right) => {
-				const comparison = left[sortBy].localeCompare(right[sortBy], 'ar');
-				return sortDescending ? -comparison : comparison;
-			})
-	);
+	const visibleStudents = $derived(matchingStudents.filter((student) =>
+		attendanceFilter === 'all' ? !statusForStudent(student.id) : true
+	));
+	const reviewedStudents = $derived(matchingStudents.filter((student) => Boolean(statusForStudent(student.id))));
 
 	const presentCount = $derived(
 		students.filter(
@@ -126,8 +138,7 @@ onMount(async () => {
 				attendanceData.history.find(
 					(record) =>
 						record.studentId === student.id &&
-						record.date === selectedDate 
-						//record.session === Number(selectedSession)
+							record.date === selectedDate
 				)?.status === 'present'
 		).length
 	);
@@ -434,31 +445,11 @@ async function setAttendance(studentId, status) {
 
 				<div>
 					<strong>{isArabic ? 'تسجيل الحضور' : 'Attendance'}</strong>
-					<span>
-						{isArabic
-							? `الحصة ${selectedSession} · ${selectedDate}`
-							: `Session ${selectedSession} · ${selectedDate}`}
-					</span>
+					<span>{isArabic ? `الحضور اليومي · ${selectedDate}` : `Daily attendance · ${selectedDate}`}</span>
 				</div>
 			</div>
 
 			<div class="controls-divider"></div>
-
-			<label class="control-field">
-				<span>{isArabic ? 'الحصة' : 'Session'}</span>
-				<select bind:value={selectedSession}>
-					{#each [1, 2, 3, 4, 5, 6, 7] as session}
-						<option value={session}>
-							{isArabic ? `الحصة ${session}` : `Session ${session}`}
-						</option>
-					{/each}
-				</select>
-			</label>
-
-			<label class="control-field">
-				<span>{isArabic ? 'التاريخ' : 'Date'}</span>
-				<input type="date" bind:value={selectedDate} />
-			</label>
 
 			<label class="search-field" for="class-student-search">
 				<AppIcon name="search" size={18} />
@@ -470,23 +461,15 @@ async function setAttendance(studentId, status) {
 				/>
 			</label>
 
-			<label class="control-field compact">
-				<span>{isArabic ? 'الحضور' : 'Attendance'}</span>
-				<select bind:value={attendanceFilter}>
-					<option value="all">{isArabic ? 'الكل' : 'All'}</option>
-					<option value="present">{isArabic ? 'حاضر' : 'Present'}</option>
-					<option value="absent">{isArabic ? 'غائب' : 'Absent'}</option>
-				</select>
-			</label>
+			<div class="attendance-filter" role="group" aria-label={isArabic ? 'تصفية الحضور' : 'Attendance filter'}>
+				<button class:active={attendanceFilter === 'all'} type="button" onclick={() => attendanceFilter = 'all'}>{isArabic ? 'الكل' : 'All'}</button>
+				<button class:active={attendanceFilter === 'present'} type="button" onclick={() => attendanceFilter = 'present'}>{isArabic ? 'حاضر' : 'Present'}</button>
+				<button class:active={attendanceFilter === 'absent'} type="button" onclick={() => attendanceFilter = 'absent'}>{isArabic ? 'غائب' : 'Absent'}</button>
+			</div>
 
-			<div class="sort-group">
-				<label class="control-field compact">
-					<span>{isArabic ? 'ترتيب' : 'Sort'}</span>
-					<select bind:value={sortBy}>
-						<option value="firstName">{isArabic ? 'الاسم' : 'First Name'}</option>
-						<option value="lastName">{isArabic ? 'اللقب' : 'Last Name'}</option>
-					</select>
-				</label>
+			<div class="sort-group" role="group" aria-label={isArabic ? 'ترتيب التلاميذ' : 'Sort students'}>
+				<button class:active={sortBy === 'firstName'} type="button" onclick={() => sortBy = 'firstName'}>{isArabic ? 'الاسم' : 'First name'}</button>
+				<button class:active={sortBy === 'lastName'} type="button" onclick={() => sortBy = 'lastName'}>{isArabic ? 'اللقب' : 'Last name'}</button>
 
 				<button
 					class="sort-button"
@@ -518,7 +501,7 @@ async function setAttendance(studentId, status) {
 		<div class="student-table-wrap">
 			<table>
 				<thead>
-					<tr>
+						<tr transition:fade={{ duration: 160 }}>
 						<th class="number-column">#</th>
 						<th>{isArabic ? 'الاسم' : 'First Name'}</th>
 						<th>{isArabic ? 'اللقب' : 'Last Name'}</th>
@@ -538,7 +521,7 @@ async function setAttendance(studentId, status) {
 
 						{@const alertLevel = getStudentAlertLevel(behaviorRecords, student.id)}
 
-						<tr>
+						<tr transition:fade={{ duration: 150 }}>
 							<td class="number-cell">
 								<span>{index + 1}</span>
 							</td>
@@ -548,6 +531,7 @@ async function setAttendance(studentId, status) {
 									{student.firstName.charAt(0).toUpperCase()}
 								</div>
 								<strong>{student.firstName}</strong>
+								<span class="mobile-last-name">{student.lastName}</span>
 							</td>
 
 							<td class="last-name-cell">
@@ -666,16 +650,34 @@ async function setAttendance(studentId, status) {
 			</table>
 		</div>
 
+		{#if attendanceFilter === 'all' && reviewedStudents.length}
+			<section class="attendance-review" aria-labelledby="attendance-review-title">
+				<div class="review-heading"><h2 id="attendance-review-title">{isArabic ? 'تم تسجيلهم اليوم' : 'Recorded today'}</h2><span>{reviewedStudents.length}</span></div>
+				<div class="review-list">
+					{#each reviewedStudents as student (student.id)}
+						{@const currentStatus = statusForStudent(student.id)}
+						{@const alertLevel = getStudentAlertLevel(behaviorRecords, student.id)}
+						<article class="review-row">
+							<div class="review-student"><strong>{student.firstName} {student.lastName}</strong><small>{student.className}</small></div>
+							<div class="review-attendance"><button class:chosen={currentStatus === 'present'} type="button" aria-label={isArabic ? 'تغيير الحالة إلى حاضر' : 'Change status to present'} onclick={() => setAttendance(student.id, 'present')}>{isArabic ? 'حاضر' : 'Present'}</button><button class:chosen-absent={currentStatus === 'absent'} type="button" aria-label={isArabic ? 'تغيير الحالة إلى غائب' : 'Change status to absent'} onclick={() => setAttendance(student.id, 'absent')}>{isArabic ? 'غائب' : 'Absent'}</button></div>
+							<div class="review-behaviour"><span class:level-one={alertLevel === 1} class:level-two={alertLevel === 2} class:level-three={alertLevel >= 3} class="behavior-dot"></span><small>{alertLevel || (isArabic ? 'لا توجد تنبيهات' : 'No alerts')}</small><a href={`/app/behaviour?student=${encodeURIComponent(student.id)}&action=add`} aria-label={isArabic ? 'إضافة تنبيه سلوكي' : 'Add behaviour alert'}>+</a></div>
+							<div class="review-actions"><button type="button" aria-label={isArabic ? `عرض ${student.firstName}` : `View ${student.firstName}`} onclick={() => openView(student)}><AppIcon name="view" size={16} /></button><button type="button" aria-label={isArabic ? `تعديل ${student.firstName}` : `Edit ${student.firstName}`} onclick={() => openEdit(student)}><AppIcon name="edit" size={16} /></button><button type="button" aria-label={isArabic ? `حذف ${student.firstName}` : `Delete ${student.firstName}`} onclick={() => openDelete(student)}><AppIcon name="delete" size={16} /></button></div>
+						</article>
+					{/each}
+				</div>
+			</section>
+		{/if}
+
 		{#if !visibleStudents.length}
 			<div class="empty-state">
 				<div class="empty-icon">
 					<AppIcon name="students" size={28} />
 				</div>
-				<h3>{isArabic ? 'لم يتم العثور على أي تلميذ' : 'No students found'}</h3>
+				<h3>{attendanceFilter === 'all' && !searchTerm.trim() && unrecordedCount === 0 ? (isArabic ? 'تم تسجيل الحضور لجميع التلاميذ' : 'Attendance is complete for this class') : (isArabic ? 'لم يتم العثور على أي تلميذ' : 'No students found')}</h3>
 				<p>
 					{isArabic
-						? 'جرّب تغيير البحث أو خيارات التصفية.'
-						: 'Try changing your search or filter options.'}
+						? attendanceFilter === 'all' && !searchTerm.trim() && unrecordedCount === 0 ? 'يمكن تعديل الحالات من قائمة المسجلين أعلاه.' : 'جرّب تغيير البحث أو خيارات التصفية.'
+						: attendanceFilter === 'all' && !searchTerm.trim() && unrecordedCount === 0 ? 'You can adjust statuses in the recorded list above.' : 'Try changing your search or filter options.'}
 				</p>
 			</div>
 		{/if}
@@ -1117,45 +1119,15 @@ async function setAttendance(studentId, status) {
 		background: var(--app-border);
 	}
 
-	.control-field {
-		display: flex;
-		min-width: 7rem;
-		flex-direction: column;
-		gap: 0.22rem;
-	}
-
-	.control-field span {
-		color: var(--app-muted);
-		font-size: 0.67rem;
-		font-weight: 700;
-	}
-
-	.control-field select,
-	.control-field input,
 	.search-field {
-		height: 2.45rem;
+		min-height: 2.75rem;
 		border: 1px solid var(--app-border);
-		border-radius: 0.5rem;
+		border-radius: 0.65rem;
 		background: var(--app-surface-strong);
 		color: var(--app-text);
 		font: inherit;
-		font-size: 0.76rem;
-		outline: none;
-		transition:
-			border-color 150ms ease,
-			box-shadow 150ms ease;
-	}
-
-	.control-field select,
-	.control-field input {
-		padding: 0 0.55rem;
-	}
-
-	.control-field select:focus,
-	.control-field input:focus,
-	.search-field:focus-within {
-		border-color: color-mix(in srgb, var(--app-accent) 60%, var(--app-border));
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-accent) 10%, transparent);
+		font-size: 1rem;
+		transition: border-color 150ms ease, background-color 150ms ease;
 	}
 
 	.search-field {
@@ -1175,8 +1147,13 @@ async function setAttendance(studentId, status) {
 		background: transparent;
 		color: var(--app-text);
 		font: inherit;
-		font-size: 0.78rem;
+		font-size: 1rem;
 	}
+
+	.search-field input:focus-visible { outline: none; }
+	.attendance-filter, .sort-group { display: flex; align-items: center; gap: 0.25rem; }
+	.attendance-filter button, .sort-group > button:not(.sort-button) { min-height: 2.75rem; padding: 0.45rem 0.65rem; border: 1px solid var(--app-border); border-radius: 0.55rem; background: var(--app-surface); color: var(--app-muted); cursor: pointer; font: inherit; font-size: 1rem; white-space: nowrap; }
+	.attendance-filter button.active, .sort-group > button.active { border-color: color-mix(in srgb, var(--app-accent) 35%, var(--app-border)); background: var(--app-accent-soft); color: var(--app-accent); font-weight: 700; }
 
 	.search-field input::placeholder {
 		color: var(--app-muted);
@@ -1186,10 +1163,6 @@ async function setAttendance(studentId, status) {
 		display: flex;
 		align-items: end;
 		gap: 0.3rem;
-	}
-
-	.control-field.compact {
-		min-width: 6.6rem;
 	}
 
 	.sort-button {
@@ -1344,6 +1317,8 @@ async function setAttendance(studentId, status) {
 		font-weight: 700;
 	}
 
+	.mobile-last-name { display: none; }
+
 	.last-name-cell {
 		font-weight: 600;
 	}
@@ -1393,6 +1368,10 @@ async function setAttendance(studentId, status) {
 	.attendance-option:hover {
 		border-color: color-mix(in srgb, var(--app-accent) 45%, var(--app-border));
 	}
+
+	.attendance-filter, .sort-group { display: flex; align-items: center; gap: 0.25rem; }
+	.attendance-filter button, .sort-group > button:not(.sort-button) { min-height: 2.5rem; padding: 0.4rem 0.6rem; border: 1px solid var(--app-border); border-radius: 0.5rem; background: var(--app-surface); color: var(--app-muted); cursor: pointer; font: inherit; font-size: 0.92rem; white-space: nowrap; }
+	.attendance-filter button.active, .sort-group > button.active { border-color: color-mix(in srgb, var(--app-accent) 35%, var(--app-border)); background: var(--app-accent-soft); color: var(--app-accent); font-weight: 750; }
 
 	.behavior-cell {
 		display: flex;
@@ -1512,6 +1491,46 @@ async function setAttendance(studentId, status) {
 		background: #fff0f0;
 		color: #b63b3b;
 	}
+
+	.attendance-review { margin-top: 1rem; }
+	.review-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+	.review-heading h2 { margin: 0; font-size: 0.98rem; }
+	.review-heading span { color: var(--app-muted); font-size: 0.8rem; }
+	.review-list { display: grid; border: 1px solid var(--app-border); border-radius: 0.65rem; background: var(--app-surface); }
+	.review-row { display: grid; grid-template-columns: minmax(10rem, 1fr) auto minmax(5rem, 0.55fr) auto; align-items: center; gap: 0.55rem; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--app-border); }
+	.review-row:last-child { border-bottom: 0; }
+	.review-student { display: flex; min-width: 0; flex-direction: column; gap: 0.05rem; }
+	.review-student strong { overflow: hidden; font-size: 0.9rem; text-overflow: ellipsis; white-space: nowrap; }
+	.review-student small { color: var(--app-muted); font-size: 0.72rem; }
+	.review-attendance { display: flex; gap: 0.2rem; }
+	.review-attendance button { min-height: 2.15rem; padding: 0.3rem 0.45rem; border: 1px solid var(--app-border); border-radius: 0.4rem; background: var(--app-surface); color: var(--app-muted); cursor: pointer; font: inherit; font-size: 0.82rem; }
+	.review-attendance button.chosen { border-color: var(--app-success); background: var(--app-success); color: #fff; }
+	.review-attendance button.chosen-absent { border-color: var(--app-danger); background: var(--app-danger); color: #fff; }
+	.review-behaviour { display: flex; align-items: center; gap: 0.3rem; }
+	.review-behaviour small { color: var(--app-muted); font-size: 0.75rem; }
+	.review-behaviour a { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid var(--app-border); border-radius: 50%; color: var(--app-accent); text-decoration: none; }
+	.review-actions { display: flex; }
+	.review-actions button { display: grid; width: 1.9rem; height: 1.9rem; place-items: center; border: 0; background: transparent; color: var(--app-muted); cursor: pointer; }
+
+	.attendance-review { margin-top: 1rem; }
+	.review-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+	.review-heading h2 { margin: 0; font-size: 0.98rem; }
+	.review-heading span { color: var(--app-muted); font-size: 0.8rem; }
+	.review-list { display: grid; border: 1px solid var(--app-border); border-radius: 0.65rem; background: var(--app-surface); }
+	.review-row { display: grid; grid-template-columns: minmax(10rem, 1fr) auto minmax(5rem, 0.55fr) auto; align-items: center; gap: 0.55rem; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--app-border); }
+	.review-row:last-child { border-bottom: 0; }
+	.review-student { display: flex; min-width: 0; flex-direction: column; gap: 0.05rem; }
+	.review-student strong { overflow: hidden; font-size: 0.9rem; text-overflow: ellipsis; white-space: nowrap; }
+	.review-student small { color: var(--app-muted); font-size: 0.72rem; }
+	.review-attendance { display: flex; gap: 0.2rem; }
+	.review-attendance button { min-height: 2.15rem; padding: 0.3rem 0.45rem; border: 1px solid var(--app-border); border-radius: 0.4rem; background: var(--app-surface); color: var(--app-muted); cursor: pointer; font: inherit; font-size: 0.82rem; }
+	.review-attendance button.chosen { border-color: var(--app-success); background: var(--app-success); color: #fff; }
+	.review-attendance button.chosen-absent { border-color: var(--app-danger); background: var(--app-danger); color: #fff; }
+	.review-behaviour { display: flex; align-items: center; gap: 0.3rem; }
+	.review-behaviour small { color: var(--app-muted); font-size: 0.75rem; }
+	.review-behaviour a { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid var(--app-border); border-radius: 50%; color: var(--app-accent); text-decoration: none; }
+	.review-actions { display: flex; }
+	.review-actions button { display: grid; width: 1.9rem; height: 1.9rem; place-items: center; border: 0; background: transparent; color: var(--app-muted); cursor: pointer; }
 
 	.empty-state {
 		display: grid;
@@ -1893,13 +1912,13 @@ async function setAttendance(studentId, status) {
 			min-width: 0;
 			grid-column: 1 / -1;
 		}
+		.search-field input { font-size: 1rem; }
+		.attendance-filter { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+		.attendance-filter button { min-height: 2.75rem; font-size: 1rem; }
+		.sort-group { grid-column: 1 / -1; display: flex; }
+		.sort-group > button:not(.sort-button) { flex: 1; min-height: 2.75rem; font-size: 1rem; }
 
 		.sort-group {
-			min-width: 0;
-		}
-
-		.control-field,
-		.control-field.compact {
 			min-width: 0;
 		}
 
@@ -1934,11 +1953,13 @@ async function setAttendance(studentId, status) {
 
 		tbody tr {
 			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 0.55rem 0.75rem;
-			padding: 0.75rem;
+			grid-template-columns: minmax(0, 1fr) auto;
+			grid-template-rows: auto auto;
+			align-items: center;
+			gap: 0.3rem 0.45rem;
+			padding: 0.45rem 0.55rem;
 			border: 1px solid var(--app-border);
-			border-radius: 0.7rem;
+			border-radius: 0.55rem;
 			background: var(--app-surface);
 			box-shadow: 0 2px 8px rgba(67, 42, 42, 0.035);
 		}
@@ -1959,29 +1980,31 @@ async function setAttendance(studentId, status) {
 		}
 
 		tbody td:nth-child(2) {
-			grid-column: 1 / -1;
+			grid-column: 1;
+			grid-row: 1;
 		}
 
 		tbody td:nth-child(3) {
-			grid-column: 1 / -1;
-			margin-top: -0.35rem;
-			margin-inline-start: 2.55rem;
-			color: var(--app-muted);
+			display: none;
 		}
 
-		tbody td:nth-child(4),
-		tbody td:nth-child(5),
-		tbody td:nth-child(6) {
-			grid-column: 1 / -1;
-		}
+		tbody td:nth-child(4) { grid-column: 2; grid-row: 1; }
+		tbody td:nth-child(5) { grid-column: 1; grid-row: 2; }
+		tbody td:nth-child(6) { grid-column: 2; grid-row: 2; }
 
 		.name-cell {
-			padding-bottom: 0.1rem;
+			gap: 0.35rem;
+			padding: 0;
 		}
+		.name-cell strong, .mobile-last-name { display: inline; font-size: 1.15rem; line-height: 1.2; }
+		.mobile-last-name { color: var(--app-text); font-weight: 650; }
+		.student-avatar { width: 1.8rem; height: 1.8rem; flex-basis: 1.8rem; font-size: 0.85rem; }
 
 		.attendance-control {
 			width: fit-content;
+			gap: 0.2rem;
 		}
+		.attendance-option { min-height: 2.75rem; padding: 0.35rem 0.48rem; font-size: 1rem; }
 
 		.behavior-cell {
 			flex-wrap: wrap;
@@ -1990,6 +2013,8 @@ async function setAttendance(studentId, status) {
 		.behavior-actions {
 			margin-inline-start: 0;
 		}
+		.behavior-text { font-size: 0.92rem; }
+		.alert-button { width: 2rem; height: 2rem; flex-basis: 2rem; }
 
 		.row-actions {
 			padding-top: 0.2rem;
@@ -1997,9 +2022,16 @@ async function setAttendance(studentId, status) {
 		}
 
 		.row-actions button {
-			width: 2.35rem;
-			height: 2.35rem;
+			width: 2rem;
+			height: 2rem;
 		}
+		.review-row { grid-template-columns: minmax(0, 1fr) auto; gap: 0.35rem 0.5rem; padding: 0.45rem 0.55rem; }
+		.review-student { grid-column: 1; grid-row: 1; }
+		.review-student strong { font-size: 1.15rem; }
+		.review-attendance { grid-column: 2; grid-row: 1; }
+		.review-attendance button { min-height: 2.5rem; font-size: 0.9rem; }
+		.review-behaviour { grid-column: 1; grid-row: 2; }
+		.review-actions { grid-column: 2; grid-row: 2; justify-content: flex-end; }
 
 		.modal {
 			width: min(100%, 31rem);
@@ -2045,9 +2077,8 @@ async function setAttendance(studentId, status) {
 			width: 100%;
 		}
 
-		.sort-group .control-field {
-			flex: 1;
-		}
+		.attendance-filter { justify-content: flex-start; }
+		.attendance-filter button, .sort-group > button:not(.sort-button) { flex: 1; }
 
 		.modal-actions {
 			flex-direction: column-reverse;

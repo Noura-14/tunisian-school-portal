@@ -1,7 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
-	import { setAuthenticatedUser } from '$lib/auth.js';
 
 	let language = $state('ar');
 	let theme = $state('light');
@@ -45,53 +44,41 @@
 		window.localStorage.setItem('school-theme', theme);
 	}
 
-	function submitLogin() {
+	async function submitLogin() {
 		errorMessage = '';
-
 		if (!username.trim()) {
-			errorMessage = isArabic
-				? 'يرجى إدخال اسم المستخدم.'
-				: 'Please enter your username.';
+			errorMessage = isArabic ? 'يرجى إدخال اسم المستخدم.' : 'Please enter your username.';
 			return;
 		}
-
 		if (!password) {
-			errorMessage = isArabic
-				? 'يرجى إدخال كلمة المرور.'
-				: 'Please enter your password.';
-			return;
-		}
-
-		if (username !== 'admin' || password !== 'admin123') {
-			errorMessage = isArabic
-				? 'بيانات الحساب التجريبي غير صحيحة.'
-				: 'The demo account details are incorrect.';
+			errorMessage = isArabic ? 'يرجى إدخال كلمة المرور.' : 'Please enter your password.';
 			return;
 		}
 
 		isLoading = true;
-
-		window.setTimeout(() => {
-			setAuthenticatedUser();
-			isLoading = false;
+		try {
+			const response = await fetch('/api/auth/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ username: username.trim(), password })
+			});
+			if (!response.ok) {
+				const result = await response.json();
+				throw new Error(result.error || (isArabic ? 'تعذر تسجيل الدخول.' : 'Unable to sign in.'));
+			}
 			isSuccess = true;
-
-			window.setTimeout(() => goto('/app'), 1200);
-		}, 650);
+			window.setTimeout(() => goto('/app'), 900);
+		} catch (error) {
+			errorMessage = error instanceof Error ? error.message : (isArabic ? 'تعذر تسجيل الدخول.' : 'Unable to sign in.');
+		} finally {
+			isLoading = false;
+		}
 	}
+	
 </script>
 
 <svelte:head>
 	<title>{documentTitle}</title>
-
-	<meta
-		name="description"
-		content={
-			isArabic
-				? 'تسجيل الدخول إلى فضاء المتابعة المدرسية'
-				: 'Sign in to the school follow-up portal'
-		}
-	/>
 </svelte:head>
 
 <main class:dark={theme === 'dark'} class="login-page" dir={pageDirection}>

@@ -213,6 +213,22 @@ textarea::placeholder {
 	opacity: 1;
 }
 
+.search-field {
+	border-radius: 0.65rem;
+	box-shadow: 0 2px 8px rgba(67, 42, 43, 0.035);
+	transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.search-field:focus-within {
+	border-color: color-mix(in srgb, var(--primary) 55%, var(--border));
+	background: var(--surface);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 10%, transparent), 0 4px 12px rgba(67, 42, 43, 0.06);
+}
+
+.search-field input:focus-visible {
+	outline: none !important;
+}
+
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,

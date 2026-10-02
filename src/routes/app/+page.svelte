@@ -1,20 +1,66 @@
 <script>
 	import { getContext, onMount } from 'svelte';
 	import AppIcon from '$lib/components/AppIcon.svelte';
-	import { loadAttendance } from '$lib/data/attendance.js';
-	import { temporaryNotifications } from '$lib/data/school.js';
-//	import { importedStudents } from '$lib/data/students.js';
+	import { loadBehaviorRecords, getStudentAlertLevel } from '$lib/data/behavior.js';
 
 	const appState = getContext('app-state');
 	const isArabic = $derived(appState.language === 'ar');
+	let now = $state(new Date());
+	/** @type {'loading' | 'ready' | 'error'} */
+	let dashboardStatus = $state('loading');
 
-/** @type {any} */
-let attendanceData = $state({
-	current: {},
-	history: []
-});
+	/** @type {{ id: string, firstName: string, lastName: string, className: string }[]} */
+	let students = $state([]);
+	/** @type {{ id: string, studentId: string, date: string, status: 'present' | 'absent' }[]} */
+	let attendanceHistory = $state([]);
+	/** @type {Array<{ id: string, studentId: string, behaviorTypes: string[], otherBehavior: string, notes: string, summary: string, createdAt: string }>} */
+	let behaviorRecords = $state([]);
+
+	/** @param {Date} date */
+	function dateKey(date) {
+		return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+	}
+
+	/** @param {string} value */
+	function localRecordDate(value) {
+		const date = new Date(value);
+		return Number.isNaN(date.getTime()) ? '' : dateKey(date);
+	}
+
 	onMount(() => {
-		attendanceData = loadAttendance();
+		const clockInterval = window.setInterval(() => now = new Date(), 60_000);
+		return () => window.clearInterval(clockInterval);
+	});
+
+	onMount(async () => {
+		behaviorRecords = loadBehaviorRecords();
+		try {
+			const [attendanceResponse, studentsResponse] = await Promise.all([
+				fetch('/api/attendance'),
+				fetch('/api/students')
+			]);
+			if (!attendanceResponse.ok || !studentsResponse.ok) throw new Error('Unable to load dashboard data');
+			const [attendanceResult, studentsResult] = await Promise.all([
+				attendanceResponse.json(),
+				studentsResponse.json()
+			]);
+			attendanceHistory = Array.isArray(attendanceResult) ? attendanceResult.map((record) => ({
+				id: String(record.id),
+				studentId: String(record.student_id),
+				date: String(record.date).slice(0, 10),
+				status: record.status
+			})) : [];
+			students = Array.isArray(studentsResult) ? studentsResult.map((student) => ({
+				id: String(student.id),
+				firstName: student.first_name ?? '',
+				lastName: student.last_name ?? '',
+				className: student.class_name ?? ''
+			})) : [];
+			dashboardStatus = 'ready';
+		} catch (error) {
+			console.error('Failed to load Home dashboard data:', error);
+			dashboardStatus = 'error';
+		}
 	});
 
 	const quickAccessItems = [
@@ -27,30 +73,39 @@ let attendanceData = $state({
 			enText: 'Organise school classes'
 		},
 		{
-			href: '/app/students',
-			icon: 'students',
-			ar: 'التلاميذ',
-			en: 'Students',
-			arText: 'متابعة بيانات التلاميذ',
-			enText: 'Follow up on student records'
+			href: '/app/absences',
+			icon: 'notifications',
+			ar: 'الغيابات',
+			en: 'Absences',
+			arText: 'متابعة الغيابات المسجلة',
+			enText: 'Review recorded absences'
 		},
 		{
-			href: '/app/notifications',
+			href: '/app/behaviour',
 			icon: 'notifications',
-			ar: 'التنبيهات',
-			en: 'Notifications',
-			arText: 'الاطلاع على التنبيهات',
-			enText: 'Review notifications'
+			ar: 'السلوك',
+			en: 'Behaviour',
+			arText: 'متابعة التنبيهات السلوكية',
+			enText: 'Review behaviour alerts'
 		}
 	];
 
-	const today = $derived(new Date().toISOString().slice(0, 10));
-	const todayRecords = $derived(
-    attendanceData.history.filter(
-        /** @param {{ date: string, status: 'present' | 'absent' }} record */
-        (record) => record.date === today
-    )
-);
+	const today = $derived(dateKey(now));
+	const greetingName = $derived((isArabic ? (appState.user?.nameAr || '') : (appState.user?.name || '')).trim().split(/\s+/).slice(0, 2).join(' '));
+	const greetingText = $derived(isArabic
+		? now.getHours() >= 5 && now.getHours() < 12
+			? `صباح الخير، ${greetingName}`
+			: now.getHours() >= 12 && now.getHours() < 24
+				? `مساء الخير، ${greetingName}`
+				: `مرحباً، ${greetingName}`
+		: now.getHours() >= 5 && now.getHours() < 12
+			? `Good morning, ${greetingName}`
+			: now.getHours() >= 12 && now.getHours() < 18
+				? `Good afternoon, ${greetingName}`
+				: `Hello, ${greetingName}`);
+	const dateLabel = $derived(now.toLocaleDateString(isArabic ? 'ar-QA-u-nu-latn' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }));
+	const timeLabel = $derived(now.toLocaleTimeString(isArabic ? 'ar-QA-u-nu-latn' : 'en-GB', { hour: 'numeric', minute: '2-digit' }));
+	const todayRecords = $derived(attendanceHistory.filter((record) => record.date === today));
 
 	const attendanceSummary = $derived({
     present: todayRecords.filter(
@@ -73,6 +128,14 @@ let attendanceData = $state({
 			? Math.round((attendanceSummary.present / recordedAttendance) * 100)
 			: 0
 	);
+	const todayBehaviorCards = $derived(behaviorRecords.flatMap((record) => {
+		if (localRecordDate(record.createdAt) !== today) return [];
+		const student = students.find((item) => item.id === record.studentId);
+		return student ? [{ record, student, level: getStudentAlertLevel(behaviorRecords, student.id) }] : [];
+	}));
+
+	const userName = $derived(isArabic ? appState.user?.nameAr : appState.user?.name);
+	const userRole = $derived(isArabic ? appState.user?.roleAr : appState.user?.role);
 </script>
 
 <section class="home-view" aria-labelledby="home-title">
@@ -83,14 +146,12 @@ let attendanceData = $state({
 				{isArabic ? 'فضاء المتابعة المدرسية' : 'SCHOOL FOLLOW-UP PORTAL'}
 			</p>
 
-			<h1 id="home-title">
-				{isArabic ? 'صباح الخير، أبو بكر باباي' : 'Good morning, Abu Bakr Babay'}
-			</h1>
+			<h1 id="home-title">{greetingText}</h1>
 
 			<p class="welcome-subtitle">
 				{isArabic
-					? 'القيّم · المدرسة التونسية بالدوحة · فرع اللقطة'
-					: 'Qayyim · Tunisian School in Doha · Al-Luqta Branch'}
+					? `${userRole || ''} · المدرسة التونسية بالدوحة · فرع اللقطة`
+					: `${userRole || ''} · Tunisian School in Doha · Al-Luqta Branch`}
 			</p>
 		</div>
 
@@ -100,21 +161,8 @@ let attendanceData = $state({
 			</span>
 
 			<div>
-				<strong>
-					{isArabic ? 'اليوم' : 'Today'}
-				</strong>
-
-				<span>
-					{new Date().toLocaleDateString(
-						isArabic ? 'ar-QA' : 'en-GB',
-						{
-							weekday: 'long',
-							day: 'numeric',
-							month: 'long',
-							year: 'numeric'
-						}
-					)}
-				</span>
+				<strong>{dateLabel}</strong>
+				<span>{timeLabel}</span>
 			</div>
 		</div>
 	</header>
@@ -166,18 +214,6 @@ let attendanceData = $state({
 		class="today-section"
 		aria-labelledby="today-title"
 	>
-		<div class="section-heading">
-			<div>
-				<p class="section-kicker">
-					{isArabic ? 'ملخص' : 'OVERVIEW'}
-				</p>
-
-				<h2 id="today-title">
-					{isArabic ? 'اليوم' : 'Today'}
-				</h2>
-			</div>
-		</div>
-
 		<div class="today-overview">
 			<!-- ATTENDANCE MAIN CARD -->
 			<div class="attendance-card">
@@ -194,11 +230,15 @@ let attendanceData = $state({
 						</div>
 
 						<div class="attendance-number">
-							{attendancePercent}<span>%</span>
+							{#if dashboardStatus === 'ready'}{attendancePercent}<span>%</span>{:else}—{/if}
 						</div>
 
 						<p>
-							{#if recordedAttendance}
+							{#if dashboardStatus === 'loading'}
+								{isArabic ? 'جارٍ تحميل بيانات اليوم...' : 'Loading today’s data...'}
+							{:else if dashboardStatus === 'error'}
+								{isArabic ? 'بيانات الحضور غير متاحة حالياً.' : 'Attendance data is currently unavailable.'}
+							{:else if recordedAttendance}
 								{isArabic
 									? `${attendanceSummary.present} من ${recordedAttendance} مسجلين كحاضرين`
 									: `${attendanceSummary.present} of ${recordedAttendance} recorded as present`}
@@ -211,12 +251,16 @@ let attendanceData = $state({
 					</div>
 
 					<div
-						class:complete={recordedAttendance > 0}
+						class:complete={dashboardStatus === 'ready' && recordedAttendance > 0}
 						class="attendance-status"
 					>
 						<span></span>
 
-						{recordedAttendance
+						{dashboardStatus === 'error'
+							? isArabic ? 'غير متاح' : 'Unavailable'
+							: dashboardStatus === 'loading'
+								? isArabic ? 'جارٍ التحميل' : 'Loading'
+								: recordedAttendance
 							? isArabic
 								? 'قيد المتابعة'
 								: 'In progress'
@@ -230,11 +274,11 @@ let attendanceData = $state({
 					class="progress-track"
 					aria-label={
 						isArabic
-							? `${attendancePercent}% حاضر`
-							: `${attendancePercent}% present`
+							? dashboardStatus === 'ready' ? `${attendancePercent}% حاضر` : (isArabic ? 'الحضور غير متاح' : 'Attendance unavailable')
+								: dashboardStatus === 'ready' ? `${attendancePercent}% present` : 'Attendance unavailable'
 					}
 				>
-					<span style={`width: ${attendancePercent}%`}></span>
+						<span style={`width: ${dashboardStatus === 'ready' ? attendancePercent : 0}%`}></span>
 				</div>
 
 				<div class="attendance-counts">
@@ -242,7 +286,7 @@ let attendanceData = $state({
 						<span class="count-dot"></span>
 
 						<div>
-							<strong>{attendanceSummary.present}</strong>
+							<strong>{dashboardStatus === 'ready' ? attendanceSummary.present : '—'}</strong>
 							<span>{isArabic ? 'حاضر' : 'Present'}</span>
 						</div>
 					</div>
@@ -251,7 +295,7 @@ let attendanceData = $state({
 						<span class="count-dot"></span>
 
 						<div>
-							<strong>{attendanceSummary.absent}</strong>
+							<strong>{dashboardStatus === 'ready' ? attendanceSummary.absent : '—'}</strong>
 							<span>{isArabic ? 'غائب' : 'Absent'}</span>
 						</div>
 					</div>
@@ -261,38 +305,14 @@ let attendanceData = $state({
 							{isArabic ? 'المسجل' : 'Recorded'}
 						</span>
 
-						<strong>{recordedAttendance}</strong>
+						<strong>{dashboardStatus === 'ready' ? recordedAttendance : '—'}</strong>
 					</div>
 				</div>
 			</div>
 
 			<!-- STATISTICS -->
 			<div class="status-grid">
-				<div class="status-block present-stat">
-					<div class="status-icon">
-						<AppIcon name="attendance" size={18} />
-					</div>
-
-					<div class="status-copy">
-						<span>
-							{isArabic ? 'الحضور' : 'Present'}
-						</span>
-
-						<strong>{attendanceSummary.present}</strong>
-
-						<small>
-							{recordedAttendance
-								? isArabic
-									? 'مسجل اليوم'
-									: 'Recorded today'
-								: isArabic
-									? 'بانتظار التسجيل'
-									: 'Awaiting records'}
-						</small>
-					</div>
-				</div>
-
-				<div class="status-block absent-stat">
+				<a class="status-block absent-stat" href="/app/absences">
 					<div class="status-icon">
 						<AppIcon name="attendance" size={18} />
 					</div>
@@ -302,10 +322,14 @@ let attendanceData = $state({
 							{isArabic ? 'الغيابات' : 'Absences'}
 						</span>
 
-						<strong>{attendanceSummary.absent}</strong>
+						<strong>{dashboardStatus === 'ready' ? attendanceSummary.absent : '—'}</strong>
 
 						<small>
-							{recordedAttendance
+							{dashboardStatus === 'error'
+								? isArabic ? 'البيانات غير متاحة' : 'Data unavailable'
+								: dashboardStatus === 'loading'
+									? isArabic ? 'جارٍ التحميل' : 'Loading'
+									: recordedAttendance
 								? isArabic
 									? 'مسجل اليوم'
 									: 'Recorded today'
@@ -314,30 +338,25 @@ let attendanceData = $state({
 									: 'Awaiting records'}
 						</small>
 					</div>
-				</div>
-
-				<div class="status-block notification-stat">
-					<div class="status-icon">
-						<AppIcon name="notifications" size={18} />
-					</div>
-
-					<div class="status-copy">
-						<span>
-							{isArabic
-								? 'التنبيهات والملاحظات'
-								: 'Notifications & notes'}
-						</span>
-
-						<strong>{temporaryNotifications.length}</strong>
-
-						<small>
-							{isArabic
-								? 'تنبيهات محلية مؤقتة'
-								: 'Temporary local notices'}
-						</small>
-					</div>
-				</div>
+				</a>
 			</div>
+
+			<section class="today-behaviour" aria-labelledby="today-behaviour-title">
+				<div class="behaviour-heading"><h3 id="today-behaviour-title">{isArabic ? 'التنبيهات السلوكية اليوم' : "Today's behaviour alerts"}</h3><a href="/app/behaviour">{isArabic ? 'عرض السجل' : 'View history'} ←</a></div>
+				{#if dashboardStatus !== 'ready'}
+					<div class="behaviour-empty"><AppIcon name="notifications" size={20} /><span>{dashboardStatus === 'loading' ? (isArabic ? 'جارٍ تحميل بيانات السلوك...' : 'Loading behaviour data...') : (isArabic ? 'تعذر تحميل بيانات السلوك.' : 'Behaviour data could not be loaded.')}</span></div>
+				{:else if todayBehaviorCards.length}
+					<div class="behaviour-card-list">
+						{#each todayBehaviorCards as item (item.record.id)}
+							<a class:level-one={item.level === 1} class:level-two={item.level === 2} class:level-three={item.level >= 3} class="today-behaviour-card" href="/app/behaviour">
+								<strong>{item.student.firstName} {item.student.lastName}</strong><span>{item.student.className} · {item.record.summary}</span><small>{new Date(item.record.createdAt).toLocaleTimeString(isArabic ? 'ar-QA-u-nu-latn' : 'en-GB', { hour: '2-digit', minute: '2-digit' })} · {isArabic ? `التنبيه ${Math.min(item.level, 3)}` : `Alert ${Math.min(item.level, 3)}`}</small>
+							</a>
+						{/each}
+					</div>
+				{:else}
+					<div class="behaviour-empty"><AppIcon name="notifications" size={20} /><span>{isArabic ? 'لا توجد تنبيهات سلوكية اليوم.' : 'No behaviour alerts today.'}</span></div>
+				{/if}
+			</section>
 		</div>
 	</section>
 
@@ -372,10 +391,10 @@ let attendanceData = $state({
 
 	.welcome-section {
 		display: flex;
-		align-items: flex-end;
+		align-items: center;
 		justify-content: space-between;
-		gap: 2rem;
-		margin-bottom: 2rem;
+		gap: 1rem;
+		margin-bottom: 1.2rem;
 	}
 
 	.welcome-copy {
@@ -393,7 +412,7 @@ let attendanceData = $state({
 
 	.welcome-section h1 {
 		margin-bottom: 0.45rem;
-		font-size: clamp(1.75rem, 4vw, 2.35rem);
+		font-size: clamp(1.45rem, 4vw, 2rem);
 		font-weight: 850;
 		line-height: 1.25;
 		letter-spacing: -0.035em;
@@ -408,14 +427,13 @@ let attendanceData = $state({
 
 	.today-date {
 		display: flex;
-		min-width: 13rem;
+		min-width: 0;
 		align-items: center;
-		gap: 0.65rem;
-		padding: 0.75rem 0.85rem;
-		border: 1px solid var(--app-border);
-		border-radius: 0.7rem;
-		background: var(--app-surface);
-		box-shadow: var(--app-shadow);
+		gap: 0.45rem;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
 	}
 
 	.date-icon {
@@ -432,17 +450,18 @@ let attendanceData = $state({
 	.today-date > div {
 		display: flex;
 		min-width: 0;
-		flex-direction: column;
-		gap: 0.15rem;
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: 0.2rem 0.45rem;
 	}
 
 	.today-date strong {
-		font-size: 0.72rem;
+		font-size: 0.82rem;
 	}
 
 	.today-date span:last-child {
 		color: var(--app-muted);
-		font-size: 0.7rem;
+		font-size: 0.82rem;
 	}
 
 	/* ================================
@@ -646,9 +665,9 @@ let attendanceData = $state({
 	}
 
 	.attendance-number {
-		margin-top: 0.8rem;
+		margin-top: 0.55rem;
 		color: var(--app-text);
-		font-size: clamp(2.3rem, 5vw, 3.15rem);
+		font-size: clamp(1.8rem, 5vw, 2.4rem);
 		font-weight: 850;
 		line-height: 1;
 		letter-spacing: -0.05em;
@@ -694,8 +713,8 @@ let attendanceData = $state({
 	}
 
 	.progress-track {
-		height: 0.55rem;
-		margin: 1.35rem 0 1rem;
+		height: 0.45rem;
+		margin: 0.8rem 0 0.7rem;
 		overflow: hidden;
 		border-radius: 2rem;
 		background: var(--app-surface-soft);
@@ -791,7 +810,12 @@ let attendanceData = $state({
 		border-radius: 0.7rem;
 		background: var(--app-surface);
 		box-shadow: var(--app-shadow);
+		color: inherit;
+		text-decoration: none;
+		transition: border-color 160ms ease, transform 160ms ease;
 	}
+
+	a.status-block:hover { border-color: var(--app-accent); transform: translateY(-1px); }
 
 	.status-icon {
 		display: grid;
@@ -804,20 +828,23 @@ let attendanceData = $state({
 		color: var(--app-muted);
 	}
 
-	.present-stat .status-icon {
-		background: color-mix(in srgb, var(--app-success) 10%, var(--app-surface));
-		color: var(--app-success);
-	}
-
 	.absent-stat .status-icon {
 		background: color-mix(in srgb, var(--app-danger) 9%, var(--app-surface));
 		color: var(--app-danger);
 	}
 
-	.notification-stat .status-icon {
-		background: var(--app-accent-soft);
-		color: var(--app-accent);
-	}
+	.today-behaviour { margin-top: 1.1rem; }
+	.behaviour-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.55rem; }
+	.behaviour-heading h3 { margin: 0; font-size: 0.9rem; }
+	.behaviour-heading a { color: var(--app-accent); font-size: 0.75rem; text-decoration: none; }
+	.behaviour-card-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+	.today-behaviour-card { display: grid; gap: 0.18rem; padding: 0.65rem 0.75rem; border: 1px solid var(--app-border); border-inline-start: 3px solid var(--app-success); border-radius: 0.55rem; background: var(--app-surface); color: var(--app-text); text-decoration: none; }
+	.today-behaviour-card.level-two { border-inline-start-color: #b7791f; }
+	.today-behaviour-card.level-three { border-inline-start-color: var(--app-danger); }
+	.today-behaviour-card strong { font-size: 0.8rem; }
+	.today-behaviour-card span { overflow: hidden; color: var(--app-muted); font-size: 0.72rem; text-overflow: ellipsis; white-space: nowrap; }
+	.today-behaviour-card small { color: var(--app-muted); font-size: 0.66rem; }
+	.behaviour-empty { display: flex; min-height: 3.2rem; align-items: center; gap: 0.55rem; padding: 0.7rem; border: 1px dashed var(--app-border); border-radius: 0.55rem; color: var(--app-muted); font-size: 0.8rem; }
 
 	.status-copy {
 		display: grid;
@@ -840,16 +867,8 @@ let attendanceData = $state({
 		line-height: 1;
 	}
 
-	.present-stat .status-copy strong {
-		color: var(--app-success);
-	}
-
 	.absent-stat .status-copy strong {
 		color: var(--app-danger);
-	}
-
-	.notification-stat .status-copy strong {
-		color: var(--app-accent);
 	}
 
 	.status-copy small {
@@ -903,7 +922,7 @@ let attendanceData = $state({
 		.welcome-section {
 			align-items: flex-start;
 			flex-direction: column;
-			gap: 1rem;
+			gap: 0.45rem;
 		}
 
 		.today-date {
@@ -925,11 +944,11 @@ let attendanceData = $state({
 
 	@media (max-width: 620px) {
 		.welcome-section {
-			margin-bottom: 1.5rem;
+			margin-bottom: 0.9rem;
 		}
 
 		.welcome-section h1 {
-			font-size: 1.65rem;
+			font-size: 1.45rem;
 		}
 
 		.welcome-subtitle {
@@ -937,8 +956,11 @@ let attendanceData = $state({
 		}
 
 		.today-date {
-			width: 100%;
+			width: auto;
+			gap: 0.4rem;
 		}
+		.date-icon { width: 1.8rem; height: 1.8rem; flex-basis: 1.8rem; }
+		.today-date strong, .today-date span:last-child { font-size: 0.9rem; }
 
 		.quick-grid {
 			grid-template-columns: 1fr;
@@ -955,6 +977,8 @@ let attendanceData = $state({
 		.status-grid {
 			grid-template-columns: 1fr;
 		}
+
+		.behaviour-card-list { grid-template-columns: 1fr; }
 
 		.status-block {
 			min-height: 4.4rem;
