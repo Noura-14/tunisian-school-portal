@@ -39,11 +39,13 @@ export async function POST({ request, cookies }) {
 		}
 
 		const token = createSessionToken(username);
+		const forwardedProtocol = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase();
+		const secureRequest = forwardedProtocol === 'https' || new URL(request.url).protocol === 'https:';
 
 		cookies.set('school_session', token, {
 			path: '/',
 			httpOnly: true,
-			secure: true,
+			secure: secureRequest,
 			sameSite: 'lax',
 			maxAge: 60 * 60 * 24 * 30
 		});

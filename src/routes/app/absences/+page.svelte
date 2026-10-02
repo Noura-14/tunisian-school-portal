@@ -41,6 +41,7 @@
 	let searchTerm = $state('');
 	let recordClass = $state('all');
 	let recordMonth = $state('');
+	let recordsSheetOpen = $state(false);
 	let exportModalOpen = $state(false);
 	let exportClass = $state('all');
 	let exportReportType = $state('class');
@@ -425,6 +426,15 @@
 		if (!exporting) exportModalOpen = false;
 	}
 
+	function openRecordsSheet() {
+		if (window.matchMedia('(max-width: 760px)').matches) recordsSheetOpen = true;
+		else document.getElementById('absence-records-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+
+	function closeRecordsSheet() {
+		recordsSheetOpen = false;
+	}
+
 	/** @param {Event & { currentTarget: HTMLSelectElement }} event */
 	function changeExportClass(event) {
 		exportClass = event.currentTarget.value;
@@ -518,7 +528,7 @@
 <svelte:head><title>{isArabic ? 'الغيابات | فضاء المتابعة' : 'Absences | Follow-up Portal'}</title></svelte:head>
 
 <section class="records-page absence-page" aria-labelledby="absences-title">
-	<header class="page-heading"><div><p class="eyebrow">{isArabic ? 'متابعة الغياب' : 'ABSENCE RECORDS'}</p><h1 id="absences-title">{isArabic ? 'الغيابات' : 'Absences'}</h1><p>{isArabic ? 'سجل غيابات التلاميذ' : 'Student absence records'}</p></div><button class="export-button" type="button" onclick={openExportModal}><AppIcon name="attendance" size={18} />{isArabic ? 'تصدير PDF' : 'Export PDF'}</button></header>
+	<header class="page-heading"><div><p class="eyebrow">{isArabic ? 'متابعة الغياب' : 'ABSENCE RECORDS'}</p><h1 id="absences-title">{isArabic ? 'الغيابات' : 'Absences'}</h1><p>{isArabic ? 'سجل غيابات التلاميذ' : 'Student absence records'}</p></div><div class="absence-header-actions"><button class="records-button" type="button" onclick={openRecordsSheet}><AppIcon name="attendance" size={16} /><span>{isArabic ? 'سجل الغياب' : 'Absence log'}</span></button><button class="export-button" type="button" onclick={openExportModal}><AppIcon name="attendance" size={18} />{isArabic ? 'تصدير PDF' : 'Export PDF'}</button></div></header>
 	<section class="workflow-setup" aria-label={isArabic ? 'اختيار القسم والتلميذ' : 'Choose class and student'}>
 		<div class="class-selection"><div class="section-heading"><h2>{isArabic ? 'القسم' : 'Class'}</h2></div><div class="class-chips" role="group" aria-label={isArabic ? 'الأقسام' : 'Classes'}>{#each classOptions as className}<button class:active={studentClass === className} type="button" aria-pressed={studentClass === className} onclick={() => chooseClass(className)}>{className}</button>{/each}</div></div>
 		{#if studentClass}
@@ -563,9 +573,10 @@
 			</dialog>
 		</div>
 	{/if}
-	<section class="records-section" aria-labelledby="absence-records-title"><div class="records-heading"><div><p class="eyebrow">{isArabic ? 'السجل' : 'SAVED RECORDS'}</p><h2 id="absence-records-title">{isArabic ? 'غيابات التلاميذ' : 'Student absences'}</h2></div><span>{new Intl.NumberFormat('en-US').format(visibleAbsences.length)}</span></div><div class="record-filters filters"><label class="search-field" for="absence-search"><AppIcon name="students" size={18} /><input id="absence-search" type="search" bind:value={searchTerm} placeholder={isArabic ? 'البحث عن تلميذ...' : 'Search students...'} /></label><label class="compact-filter"><span>{isArabic ? 'الشهر' : 'Month'}</span><input type="month" bind:value={recordMonth} /></label></div><div class="record-class-chips" aria-label={isArabic ? 'تصفية السجل حسب القسم' : 'Filter records by class'}><button class:active={recordClass === 'all'} type="button" onclick={() => recordClass = 'all'}>{isArabic ? 'جميع الأقسام' : 'All classes'}</button>{#each classOptions as className}<button class:active={recordClass === className} type="button" onclick={() => recordClass = className}>{className}</button>{/each}</div>
+	{#if recordsSheetOpen}<div class="records-sheet-backdrop" role="presentation" onclick={closeRecordsSheet}></div>{/if}
+	<section class:mobile-open={recordsSheetOpen} class="records-section" aria-labelledby="absence-records-title" role={recordsSheetOpen ? 'dialog' : undefined} aria-modal={recordsSheetOpen ? 'true' : undefined}><div class="records-heading"><div><p class="eyebrow">{isArabic ? 'السجل' : 'SAVED RECORDS'}</p><h2 id="absence-records-title">{isArabic ? 'غيابات التلاميذ' : 'Student absences'}</h2></div><span>{new Intl.NumberFormat('en-US').format(visibleAbsences.length)}</span><button class="records-sheet-close" type="button" aria-label={isArabic ? 'إغلاق سجل الغياب' : 'Close absence records'} onclick={closeRecordsSheet}>×</button></div><div class="record-filters filters"><label class="search-field" for="absence-search"><AppIcon name="students" size={18} /><input id="absence-search" type="search" bind:value={searchTerm} placeholder={isArabic ? 'البحث عن تلميذ...' : 'Search students...'} /></label><label class="compact-filter"><span>{isArabic ? 'الشهر' : 'Month'}</span><input type="month" bind:value={recordMonth} /></label></div><div class="record-class-chips" aria-label={isArabic ? 'تصفية السجل حسب القسم' : 'Filter records by class'}><button class:active={recordClass === 'all'} type="button" onclick={() => recordClass = 'all'}>{isArabic ? 'جميع الأقسام' : 'All classes'}</button>{#each classOptions as className}<button class:active={recordClass === className} type="button" onclick={() => recordClass = className}>{className}</button>{/each}</div>
 		<p class="result-count" aria-live="polite">{new Intl.NumberFormat('en-US').format(visibleAbsences.length)} {isArabic ? 'غياب مسجل' : 'recorded absences'}</p>
-		{#if visibleAbsences.length}<div class="absence-list">{#each visibleAbsences as item (item.id)}<article class="absence-record"><div class="absence-record-person"><strong>{item.student.firstName} {item.student.lastName}</strong><span>{item.student.className}</span></div><div class="absence-record-details"><time datetime={item.startDate}>{item.startDate === item.endDate ? formatDate(item.startDate) : `${formatDate(item.startDate)} → ${formatDate(item.endDate)}`}</time><span>{item.reasonAvailable ? item.period?.reason ? reasonName(item.period.reason, item.period.reason_notes ?? '') : (isArabic ? 'غياب غير مبرر' : 'Unjustified absence') : (isArabic ? 'تفاصيل السبب غير متاحة' : 'Reason details unavailable')}</span></div><button class="record-reason-action" type="button" aria-label={item.period?.reason ? (isArabic ? 'تعديل سبب الغياب' : 'Edit absence reason') : (isArabic ? 'إضافة سبب الغياب' : 'Add absence reason')} title={item.period?.reason ? (isArabic ? 'تعديل السبب' : 'Edit reason') : (isArabic ? 'إضافة السبب' : 'Add reason')} onclick={() => editAbsenceReason(item)}>+</button>{#if item.period?.document_name}<span class="attachment-indicator" aria-label={isArabic ? 'وثيقة مرفقة' : 'Attachment'} title={item.period.document_name}><span aria-hidden="true">📎</span><small>{item.period.document_name}</small></span>{/if}</article>{/each}</div>{:else}<div class="empty-state">{isArabic ? 'لا توجد غيابات مطابقة.' : 'No absences match these filters.'}</div>{/if}
+		{#if visibleAbsences.length}<div class="absence-list">{#each visibleAbsences as item (item.id)}<article class="absence-record"><div class="absence-record-person"><strong>{item.student.firstName} {item.student.lastName}</strong><span>{item.student.className}</span></div><div class="absence-record-details"><time datetime={item.startDate}>{item.startDate === item.endDate ? formatDate(item.startDate) : `${formatDate(item.startDate)} → ${formatDate(item.endDate)}`}</time><span>{item.reasonAvailable ? item.period?.reason ? reasonName(item.period.reason, item.period.reason_notes ?? '') : (isArabic ? 'غياب غير مبرر' : 'Unjustified absence') : (isArabic ? 'تفاصيل السبب غير متاحة' : 'Reason details unavailable')}</span></div><button class="record-reason-action" type="button" aria-label={item.period?.reason ? (isArabic ? 'تعديل سبب الغياب' : 'Edit absence reason') : (isArabic ? 'إضافة سبب الغياب' : 'Add absence reason')} title={item.period?.reason ? (isArabic ? 'تعديل السبب' : 'Edit reason') : (isArabic ? 'إضافة السبب' : 'Add reason')} onclick={() => { closeRecordsSheet(); editAbsenceReason(item); }}>+</button>{#if item.period?.document_name}<span class="attachment-indicator" aria-label={isArabic ? 'وثيقة مرفقة' : 'Attachment'} title={item.period.document_name}><span aria-hidden="true">📎</span><small>{item.period.document_name}</small></span>{/if}</article>{/each}</div>{:else}<div class="empty-state">{isArabic ? 'لا توجد غيابات مطابقة.' : 'No absences match these filters.'}</div>{/if}
 	</section>
 </section>
 {#if toast}
@@ -758,5 +769,38 @@
 		.result-count { font-size:1rem; }
 		.compact-filter { font-size:1rem; }
 		.compact-filter input { font-size:1.1rem; }
+	}
+	.absence-header-actions { display:flex; flex:0 0 auto; align-items:center; gap:.4rem; }
+	.records-button { display:flex; min-height:2.75rem; align-items:center; gap:.35rem; padding:.4rem .65rem; border:1px solid var(--app-border); border-radius:.5rem; background:var(--app-surface); color:var(--app-text); cursor:pointer; font:inherit; font-size:.9rem; font-weight:700; }
+	.records-sheet-backdrop,.records-sheet-close { display:none; }
+	@media (max-width:760px) {
+		.page-heading { align-items:center; gap:.4rem; }
+		.page-heading > div { min-width:0; flex:1; }
+		.page-heading h1 { font-size:1.45rem; }
+		.page-heading p:last-child { font-size:.85rem; }
+		.absence-header-actions { gap:.25rem; }
+		.export-button,.records-button { min-height:2.25rem; gap:.25rem; padding:.32rem .45rem; border-radius:.4rem; font-size:.78rem; white-space:nowrap; }
+		.records-section { display:none; }
+		.records-sheet-backdrop { position:fixed; z-index:145; inset:0; display:block; background:rgb(20 25 23 / 46%); backdrop-filter:blur(2px); }
+		.records-section.mobile-open { position:fixed; z-index:146; inset-inline:.45rem; bottom:env(safe-area-inset-bottom); display:block; max-height:min(78dvh,48rem); overflow:auto; overscroll-behavior:contain; margin:0; padding:.55rem; border-radius:.65rem .65rem 0 0; }
+		.records-section.mobile-open .records-heading { position:sticky; z-index:1; top:-.55rem; margin:-.55rem -.55rem .4rem; padding:.55rem; background:var(--app-surface); }
+		.records-sheet-close { display:grid; width:2rem; height:2rem; flex:0 0 2rem; place-items:center; border:1px solid var(--app-border); border-radius:.4rem; background:var(--app-surface); color:var(--app-muted); cursor:pointer; font:inherit; font-size:1.2rem; }
+		.records-section .records-heading h2 { font-size:1rem; }
+		.records-section .records-heading > span { min-width:1.9rem; min-height:1.9rem; }
+		.record-filters.filters { grid-template-columns:minmax(0,1fr) minmax(6rem,.55fr); gap:.3rem; }
+		.record-filters .search-field,.compact-filter input { min-height:2.2rem; }
+		.record-class-chips { padding:.2rem 0; }
+		.record-class-chips button { min-height:2rem; padding:.25rem .4rem; font-size:.78rem; }
+		.records-section .result-count { margin:.25rem 0; font-size:.78rem; }
+		.absence-list { border-top:1px solid var(--app-border); }
+		.absence-record { grid-template-columns:minmax(0,1fr) auto auto; gap:.15rem .3rem; padding:.35rem .1rem; }
+		.absence-record-person { grid-column:1; grid-row:1; }
+		.absence-record-details { grid-column:1; grid-row:2; gap:.05rem; }
+		.absence-record-person strong { font-size:.95rem; }
+		.absence-record-person span,.absence-record-details span { font-size:.78rem; }
+		.absence-record-details time { font-size:.85rem; }
+		.record-reason-action { grid-column:2; grid-row:1 / 3; width:1.9rem; height:1.9rem; font-size:1.05rem; }
+		.attachment-indicator { grid-column:3; grid-row:1 / 3; max-width:1.8rem; }
+		.attachment-indicator small { display:none; }
 	}
 </style>

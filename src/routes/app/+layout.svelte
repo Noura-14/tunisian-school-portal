@@ -29,6 +29,7 @@ import AppIcon from '$lib/components/AppIcon.svelte';
 	const direction = $derived(isArabic ? 'rtl' : 'ltr');
 	const currentPath = $derived(page.url.pathname);
 	const currentUser = $derived(appState.user);
+	let profileOpen = $state(false);
 
 	onMount(() => {
 	const savedTheme = window.localStorage.getItem('school-theme');
@@ -90,6 +91,7 @@ import AppIcon from '$lib/components/AppIcon.svelte';
 	function handleWindowKeydown(event) {
 		if (event.key === 'Escape') {
 			closeDrawer();
+			profileOpen = false;
 		}
 	}
 
@@ -366,10 +368,10 @@ async function signOut() {
 						{/if}
 					</button>
 
-					<div class="profile-identity" aria-label={`${isArabic ? currentUser.nameAr : currentUser.name}, ${isArabic ? currentUser.roleAr : currentUser.role}`}>
+					<button class="profile-identity" type="button" aria-label={`${isArabic ? currentUser.nameAr : currentUser.name}, ${isArabic ? currentUser.roleAr : currentUser.role}`} aria-expanded={profileOpen} onclick={() => profileOpen = !profileOpen}>
 						<div class="profile-avatar" aria-hidden="true">{isArabic ? 'أ' : 'A'}</div>
 						<div class="profile-text"><strong>{isArabic ? currentUser.nameAr : currentUser.name}</strong><small>{isArabic ? currentUser.roleAr : currentUser.role}</small></div>
-					</div>
+					</button>
 					<button class="logout-button" type="button" aria-label={isArabic ? 'تسجيل الخروج' : 'Sign out'} title={isArabic ? 'تسجيل الخروج' : 'Sign out'} onclick={signOut}><AppIcon name="logout" size={18} /></button>
 				</div>
 			</header>
@@ -835,7 +837,12 @@ async function signOut() {
 		display: flex;
 		align-items: center;
 		gap: 0.55rem;
+		padding: 0;
+		border: 0;
+		background: transparent;
 		color: var(--app-text);
+		cursor: pointer;
+		font: inherit;
 	}
 	.logout-button { display:grid; width:2.35rem; height:2.35rem; flex:0 0 2.35rem; place-items:center; border:1px solid transparent; border-radius:.5rem; background:transparent; color:var(--app-muted); cursor:pointer; }
 	.logout-button:hover { background:var(--app-accent-soft); color:var(--app-accent); }
@@ -902,6 +909,11 @@ async function signOut() {
 		outline-offset: 3px;
 	}
 
+	.profile-identity:focus-visible {
+		outline: 3px solid color-mix(in srgb, var(--app-accent) 30%, transparent);
+		outline-offset: 3px;
+	}
+
 	/* ================================
 	   MOBILE
 	================================ */
@@ -949,6 +961,7 @@ async function signOut() {
 
 		.header-actions {
 			grid-area: actions;
+			min-width: 0;
 			justify-content: space-between;
 			gap: 0.45rem;
 			padding-top: 0.35rem;
@@ -968,8 +981,20 @@ async function signOut() {
 			flex-basis: 2.25rem;
 		}
 
-		.profile-text {
+		.profile-identity { position: relative; min-width: 2.25rem; min-height: 2.25rem; justify-content: center; }
+		.profile-text { display: none; }
+		.profile-identity[aria-expanded='true'] .profile-text {
+			position: absolute;
+			z-index: 30;
+			inset-block-start: calc(100% + 0.4rem);
+			inset-inline-end: 0;
 			display: flex;
+			min-width: max-content;
+			padding: 0.55rem 0.7rem;
+			border: 1px solid var(--app-border);
+			border-radius: 0.45rem;
+			background: var(--app-surface);
+			box-shadow: var(--app-shadow);
 		}
 		.profile-text strong { font-size: 0.85rem; }
 		.profile-text small { font-size: 0.72rem; }

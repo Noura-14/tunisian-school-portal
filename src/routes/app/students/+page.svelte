@@ -485,5 +485,34 @@ importedStudents = Array.isArray(result)
 		.student-card-details small { color: var(--app-muted); font-size: 0.75rem; }
 		.student-card .row-actions { border-top: 1px solid var(--app-border); padding-top: 0.65rem; }
 	}
+	@media (max-width: 640px) {
+		.page-heading { align-items: center; flex-direction: row; gap: 0.5rem; margin-bottom: 0.65rem; }
+		.page-heading > div { min-width: 0; }
+		.page-heading h1 { margin-bottom: 0.15rem; font-size: 1.5rem; }
+		.page-heading > div > p:last-child { font-size: 0.85rem; line-height: 1.35; }
+		.add-button { width: auto; min-height: 2.35rem; padding: 0.4rem 0.6rem; font-size: 0.85rem; box-shadow: none; }
+		.filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.55fr); gap: 0.35rem; align-items: end; margin-bottom: 0.55rem; padding: 0.45rem; box-shadow: none; }
+		.class-filter { min-width: 0; }
+		.search-field,.class-filter select { min-height: 2.4rem; }
+		.overview-grid { gap: 0.35rem; margin-bottom: 0.55rem; }
+		.overview-card { min-height: 3.25rem; gap: 0.45rem; padding: 0.4rem 0.5rem; box-shadow: none; }
+		.overview-icon { width: 1.7rem; height: 1.7rem; flex-basis: 1.7rem; }
+		.overview-card strong { font-size: 1.05rem; }
+		.overview-card div > span { font-size: 0.7rem; }
+		.list-summary { margin-bottom: 0.35rem; font-size: 0.82rem; }
+		.mobile-list { gap: 0.25rem; }
+		.student-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.25rem 0.4rem; padding: 0.4rem 0.5rem; border-radius: 0.4rem; box-shadow: none; }
+		.student-card-heading { grid-column: 1; align-items: center; gap: 0.35rem; min-width: 0; margin: 0; }
+		.student-card-heading strong { overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+		.student-card .class-badge { flex: 0 0 auto; padding: 0.15rem 0.35rem; font-size: 0.7rem; }
+		.student-card-details { grid-column: 1; display: flex; flex-wrap: wrap; gap: 0.2rem 0.45rem; min-width: 0; margin: 0; }
+		.student-card-details > span:nth-child(-n+2) { display: none; }
+		.student-card-details > span:nth-child(n+3) { flex-direction: row; align-items: center; gap: 0.2rem; min-width: 0; font-size: 0.75rem; }
+		.student-card-details > span:nth-child(n+3) > small:first-child { font-size: 0.68rem; }
+		.student-card-details .status-badge,.student-card-details .behaviour-badge { padding: 0.15rem 0.35rem; font-size: 0.68rem; }
+		.student-card .row-actions { grid-column: 2; grid-row: 1 / 3; gap: 0.05rem; padding: 0; border: 0; }
+		.student-card .row-actions button { width: 1.75rem; min-height: 1.75rem; justify-content: center; padding: 0; font-size: 0; }
+		.empty-state { min-height: 9rem; padding: 1rem; }
+	}
 	@media (prefers-reduced-motion: reduce) { .students-page, .modal { animation: none; } }
 </style>

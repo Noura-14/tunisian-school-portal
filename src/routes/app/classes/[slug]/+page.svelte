@@ -2090,6 +2090,53 @@ async function setAttendance(studentId, status) {
 		}
 	}
 
+	@media (max-width: 760px) {
+		.page-header { gap: 0.55rem; margin-bottom: 0.75rem; }
+		.add-button { width: auto; min-height: 2.35rem; padding: 0.45rem 0.7rem; }
+		.summary-grid { gap: 0.35rem; margin-bottom: 0.55rem; }
+		.summary-card { min-height: 3.2rem; gap: 0.45rem; padding: 0.4rem 0.5rem; border-radius: 0.45rem; box-shadow: none; }
+		.summary-icon { width: 1.8rem; height: 1.8rem; flex-basis: 1.8rem; }
+		.summary-card span { margin-bottom: 0.1rem; font-size: 0.68rem; }
+		.summary-card strong { font-size: 1.1rem; }
+		.control-panel { gap: 0.35rem; margin-bottom: 0.65rem; padding: 0.45rem; border-radius: 0.5rem; box-shadow: none; }
+		.attendance-context { gap: 0.4rem; min-width: 0; }
+		.context-icon { width: 1.9rem; height: 1.9rem; flex-basis: 1.9rem; }
+		.search-field { min-height: 2.35rem; padding-inline: 0.5rem; }
+		.attendance-filter { grid-column: 1; display: flex; gap: 0.15rem; }
+		.attendance-filter button,.sort-group > button:not(.sort-button) { min-height: 2rem; padding: 0.25rem 0.35rem; font-size: 0.78rem; }
+		.sort-group { grid-column: 2; gap: 0.15rem; }
+		.sort-group > button:not(.sort-button) { min-width: 0; }
+		.sort-button { width: 2rem; height: 2rem; }
+		.table-header { gap: 0.35rem; margin-bottom: 0.35rem; }
+		tbody { gap: 0.25rem; }
+		tbody tr { gap: 0.15rem 0.35rem; padding: 0.28rem 0.4rem; border-radius: 0.4rem; box-shadow: none; }
+		.name-cell { gap: 0.3rem; }
+		.name-cell strong,.mobile-last-name { font-size: 1rem; }
+		.student-avatar { width: 1.6rem; height: 1.6rem; flex-basis: 1.6rem; font-size: 0.75rem; }
+		.attendance-control { gap: 0.15rem; }
+		.attendance-option { min-height: 1.9rem; gap: 0.18rem; padding: 0.15rem 0.35rem; border-radius: 999px; font-size: 0.78rem; }
+		.attendance-option span { font-size: 0.72rem; }
+		.behavior-text { font-size: 0.78rem; }
+		.alert-button { width: 1.75rem; height: 1.75rem; flex-basis: 1.75rem; }
+		.row-actions { padding-top: 0; }
+		.row-actions button { width: 1.75rem; height: 1.75rem; }
+		.review-row { gap: 0.2rem 0.35rem; padding: 0.3rem 0.4rem; }
+		.review-student { flex-direction: row; align-items: baseline; gap: 0.3rem; }
+		.review-student strong { min-width: 0; flex: 1; font-size: 1rem; }
+		.review-student small { flex: 0 0 auto; font-size: 0.7rem; }
+		.review-attendance { gap: 0.15rem; }
+		.review-attendance button { min-height: 1.9rem; padding: 0.15rem 0.35rem; border-radius: 999px; font-size: 0.78rem; }
+		.review-actions button { width: 1.7rem; height: 1.7rem; }
+	}
+
+	@media (max-width: 460px) {
+		.control-panel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+		.attendance-context,.search-field { grid-column: 1 / -1; }
+		.attendance-filter { grid-column: 1; }
+		.sort-group { grid-column: 2; }
+		.attendance-filter button,.sort-group > button:not(.sort-button) { font-size: 0.74rem; }
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.class-students-page,
 		.modal-backdrop,
