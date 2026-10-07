@@ -164,6 +164,7 @@
 
 	@media (max-width: 760px) {
 		.history-page { animation: none; }
+		.page-heading h1 { font-size: 1.25rem; line-height: 1.3; }
 		.filters { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: 0.5rem; padding: 0; border: 0; background: transparent; }
 		.filters .search-field { grid-column: 1 / -1; min-width: 0; }
 		.filters .class-filter { grid-column: 1 / -1; }
@@ -206,7 +207,7 @@
 		tbody td:nth-child(5) { grid-column: 3; grid-row: 2; }
 		tbody td:nth-child(6) { grid-column: 4; grid-row: 2; }
 		tbody td { font-size: 0.88rem; overflow-wrap: anywhere; }
-		.mobile-label { font-size: 0.72rem; }
+		.mobile-label { font-size: 0.75rem; }
 	}
 
 	@media (max-width: 390px) {

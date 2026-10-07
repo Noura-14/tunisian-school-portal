@@ -989,9 +989,9 @@ async function signOut() {
 		.language-control {
 			display: flex;
 			gap: 0.25rem;
-			font-size: 1rem;
+			font-size: 0.88rem;
 		}
-		.language-control button { min-height: 2.2rem; padding: 0.35rem 0.25rem; font-size: 1rem; }
+		.language-control button { min-height: 2.2rem; padding: 0.35rem 0.25rem; font-size: 0.88rem; }
 
 		.theme-button {
 			width: 2.25rem;
@@ -999,28 +999,18 @@ async function signOut() {
 			flex-basis: 2.25rem;
 		}
 
-		.profile-identity { position: relative; min-width: 2.25rem; min-height: 2.25rem; justify-content: center; }
-		.profile-text { display: none; }
+		.profile-identity { position: relative; min-width: 0; min-height: 2.25rem; flex: 0 1 auto; justify-content: flex-start; }
+		.profile-avatar { display: none; }
+		.profile-text { display: flex; min-width: 0; max-width: 5.1rem; }
+		.profile-text strong { max-width: 5.1rem; overflow: hidden; font-size: 0.7rem; text-overflow: ellipsis; white-space: nowrap; }
+		.profile-text small { font-size: 0.62rem; white-space: nowrap; }
 		.profile-identity[aria-expanded='true'] .profile-text {
-			position: absolute;
-			z-index: 30;
-			inset-block-start: calc(100% + 0.4rem);
-			inset-inline-end: 0;
-			display: flex;
-			min-width: max-content;
-			padding: 0.55rem 0.7rem;
-			border: 1px solid var(--app-border);
-			border-radius: 0.45rem;
-			background: var(--app-surface);
-			box-shadow: var(--app-shadow);
-		}
-		.profile-text strong { font-size: 0.85rem; }
-		.profile-text small { font-size: 0.72rem; }
-
-		.profile-avatar {
-			width: 2.25rem;
-			height: 2.25rem;
-			flex-basis: 2.25rem;
+			position: static;
+			min-width: 0;
+			padding: 0;
+			border: 0;
+			background: transparent;
+			box-shadow: none;
 		}
 
 		.application-content {

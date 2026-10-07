@@ -2044,4 +2044,23 @@ const studentsByClass = $derived(
 @media(max-width:430px){h1{font-size:1.75rem}.filters{gap:.55rem}.record-list tr{padding:.8rem}.student-dropdown{max-height:50vh}.history-top{align-items:flex-start;flex-direction:column}.history-top time{white-space:normal}.modal-actions button{min-width:0}.add-button,.primary-button,.secondary-button{font-size:1rem}}
 @media(prefers-reduced-motion:reduce){.behaviour-page,.add-button,.primary-button,.secondary-button,.alert-trigger,.alert-popover,.student-option{animation:none;transition:none}}
 @keyframes page-enter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+	@media (max-width:700px) {
+		.page-heading { margin-bottom: 0.75rem; padding: 0.75rem 0.85rem; }
+		.record-list tbody { gap: 0.35rem; }
+		.record-list tr { gap: 0.3rem 0.5rem; padding: 0.55rem; }
+		.record-list td { font-size: 0.9rem; }
+		h1 { font-size: 1.25rem; line-height: 1.3; }
+	}
+	@media (max-width:430px) {
+		h1 { font-size: 1.25rem; }
+	}
+	:global(.application-shell.dark) .alert-trigger.level-1,
+	:global(.application-shell.dark) .popover-level.level-1,
+	:global(.application-shell.dark) .history-number.level-1 { color: #86efac; }
+	:global(.application-shell.dark) .alert-trigger.level-2,
+	:global(.application-shell.dark) .popover-level.level-2,
+	:global(.application-shell.dark) .history-number.level-2 { color: #fcd34d; }
+	:global(.application-shell.dark) .alert-trigger.level-3,
+	:global(.application-shell.dark) .popover-level.level-3,
+	:global(.application-shell.dark) .history-number.level-3 { color: #fca5a5; }
 </style>

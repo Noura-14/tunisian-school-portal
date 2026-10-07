@@ -776,10 +776,10 @@
 	.records-sheet-backdrop,.records-sheet-close { display:none; }
 	@media (max-width:760px) {
 		.page-heading { align-items:center; flex-wrap:wrap; gap:.4rem; }
-		.page-heading > div { min-width:0; flex:1 1 9rem; }
-		.page-heading h1 { font-size:1.45rem; }
+		.page-heading > div:not(.absence-header-actions) { min-width:0; flex:1 1 9rem; }
+		.page-heading h1 { font-size:1.25rem; }
 		.page-heading p:last-child { font-size:.85rem; }
-		.absence-header-actions { flex:1 1 100%; justify-content:flex-start; gap:.35rem; min-width:0; }
+		.page-heading > .absence-header-actions { flex:1 1 100%; justify-content:flex-start; gap:.35rem; min-width:0; }
 		.absence-header-actions > button { flex:1 1 0; min-width:0; justify-content:center; }
 		.export-button,.records-button { min-height:2.25rem; gap:.25rem; padding:.32rem .5rem; border-radius:.4rem; font-size:.85rem; white-space:nowrap; }
 		.records-section { display:none; }

@@ -1455,12 +1455,33 @@
 	}
 
 	@media (max-width: 520px) {
+		.login-header {
+			flex-wrap: wrap;
+			gap: 0.4rem 0.75rem;
+		}
+
+		.brand {
+			min-width: 0;
+			flex: 1 1 12rem;
+		}
+
+		.brand-text {
+			min-width: 0;
+		}
+
 		.brand-text span {
-			display: none;
+			display: block;
+			font-size: 0.65rem;
+			line-height: 1.25;
+			overflow-wrap: anywhere;
 		}
 
 		.brand-text strong {
 			font-size: 0.76rem;
+		}
+
+		.header-controls {
+			gap: 0.4rem;
 		}
 
 		.language-switcher {
@@ -1472,11 +1493,27 @@
 		}
 
 		.card-content {
-			padding: 1.75rem 1.1rem;
+			padding: 1.2rem 0.9rem;
+		}
+
+		.welcome-icon {
+			margin-bottom: 0.75rem;
+		}
+
+		.heading {
+			margin-bottom: 1rem;
+		}
+
+		h1 {
+			font-size: 1.5rem;
+		}
+
+		.login-form {
+			gap: 0.85rem;
 		}
 
 		.education-panel {
-			min-height: 19rem;
+			min-height: 17rem;
 		}
 
 		.visual-footer {

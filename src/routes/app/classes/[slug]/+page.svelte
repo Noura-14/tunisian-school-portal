@@ -1887,6 +1887,10 @@ async function setAttendance(studentId, status) {
 			padding-bottom: 1.25rem;
 		}
 
+		.page-header h1 {
+			font-size: 1.25rem;
+		}
+
 		.page-header {
 			align-items: stretch;
 			flex-direction: column;

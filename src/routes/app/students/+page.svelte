@@ -424,6 +424,11 @@ importedStudents = Array.isArray(result)
 	.status-present, .behaviour-none { color: #27965a; background: rgba(39,150,90,0.12); }
 	.status-absent, .behaviour-high { color: #d73535; background: rgba(215,53,53,0.12); }
 	.status-late, .behaviour-medium { color: #c18416; background: rgba(193,132,22,0.12); }
+	:global(.application-shell.dark) .status-present, :global(.application-shell.dark) .behaviour-none { color: #86efac; background: rgba(34,197,94,0.16); }
+	:global(.application-shell.dark) .status-absent, :global(.application-shell.dark) .behaviour-high { color: #fca5a5; background: rgba(239,68,68,0.16); }
+	:global(.application-shell.dark) .status-late, :global(.application-shell.dark) .behaviour-medium { color: #fcd34d; background: rgba(245,158,11,0.16); }
+	:global(.application-shell.dark) .present-card .overview-icon { color: #86efac; }
+	:global(.application-shell.dark) .late-card .overview-icon { color: #fcd34d; }
 	.status-none, .behaviour-low { color: var(--app-muted); background: var(--app-surface-strong); }
 	.status-stack small { color: var(--app-muted); font-size: 0.7rem; }
 	.list-summary { margin: 0 0 0.75rem; color: var(--app-muted); font-size: 0.9rem; }
@@ -489,7 +494,7 @@ importedStudents = Array.isArray(result)
 	@media (max-width: 640px) {
 		.page-heading { align-items: center; flex-direction: row; gap: 0.5rem; margin-bottom: 0.65rem; }
 		.page-heading > div { min-width: 0; }
-		.page-heading h1 { margin-bottom: 0.15rem; font-size: 1.5rem; }
+		.page-heading h1 { margin-bottom: 0.15rem; font-size: 1.25rem; }
 		.page-heading > div > p:last-child { font-size: 0.85rem; line-height: 1.35; }
 		.add-button { width: auto; min-height: 2.35rem; padding: 0.4rem 0.6rem; font-size: 0.85rem; box-shadow: none; }
 		.filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.55fr); gap: 0.35rem; align-items: end; margin-bottom: 0.55rem; padding: 0.45rem; box-shadow: none; }

@@ -1007,7 +1007,7 @@ let classes = $state([...classOptions]);
 		}
 
 		h1 {
-			font-size: 1.65rem;
+			font-size: 1.25rem;
 		}
 
 		.heading-description {
@@ -1015,8 +1015,8 @@ let classes = $state([...classOptions]);
 		}
 
 		.summary-card {
-			min-height: 4.5rem;
-			padding: 0.7rem;
+			min-height: 4rem;
+			padding: 0.55rem;
 		}
 
 		.summary-icon {
