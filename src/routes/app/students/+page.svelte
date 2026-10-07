@@ -417,6 +417,7 @@ importedStudents = Array.isArray(result)
 	.overview-card div > span { color: var(--app-muted); font-size: 0.78rem; }
 	.present-card .overview-icon { color: #27965a; background: rgba(39,150,90,0.12); }
 	.absent-card .overview-icon { color: #d73535; background: rgba(215,53,53,0.12); }
+	:global(.application-shell.dark) .absent-card .overview-icon { color: #f08a8a; }
 	.late-card .overview-icon { color: #c18416; background: rgba(193,132,22,0.12); }
 	.status-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; }
 	.status-badge, .behaviour-badge { display: inline-flex; width: fit-content; align-items: center; padding: 0.28rem 0.55rem; border-radius: 999px; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
@@ -503,7 +504,7 @@ importedStudents = Array.isArray(result)
 		.mobile-list { gap: 0.25rem; }
 		.student-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.25rem 0.4rem; padding: 0.4rem 0.5rem; border-radius: 0.4rem; box-shadow: none; }
 		.student-card-heading { grid-column: 1; align-items: center; gap: 0.35rem; min-width: 0; margin: 0; }
-		.student-card-heading strong { overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+		.student-card-heading strong { overflow: visible; font-size: 1rem; line-height: 1.3; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
 		.student-card .class-badge { flex: 0 0 auto; padding: 0.15rem 0.35rem; font-size: 0.7rem; }
 		.student-card-details { grid-column: 1; display: flex; flex-wrap: wrap; gap: 0.2rem 0.45rem; min-width: 0; margin: 0; }
 		.student-card-details > span:nth-child(-n+2) { display: none; }

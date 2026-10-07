@@ -1060,6 +1060,12 @@ async function setAttendance(studentId, status) {
 		font-size: 0.72rem;
 	}
 
+	.summary-card .summary-icon span {
+		margin-bottom: 0;
+		color: inherit;
+		font-size: inherit;
+	}
+
 	.summary-card strong {
 		display: block;
 		color: var(--app-text);
@@ -2122,7 +2128,7 @@ async function setAttendance(studentId, status) {
 		.row-actions button { width: 1.75rem; height: 1.75rem; }
 		.review-row { gap: 0.2rem 0.35rem; padding: 0.3rem 0.4rem; }
 		.review-student { flex-direction: row; align-items: baseline; gap: 0.3rem; }
-		.review-student strong { min-width: 0; flex: 1; font-size: 1rem; }
+		.review-student strong { min-width: 0; flex: 1; overflow: visible; font-size: 1rem; line-height: 1.3; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
 		.review-student small { flex: 0 0 auto; font-size: 0.7rem; }
 		.review-attendance { gap: 0.15rem; }
 		.review-attendance button { min-height: 1.9rem; padding: 0.15rem 0.35rem; border-radius: 999px; font-size: 0.78rem; }

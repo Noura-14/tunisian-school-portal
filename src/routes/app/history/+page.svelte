@@ -76,10 +76,10 @@
 		const justifiedAbsences = hasUnknownReason ? null : absenceReasonsForStudent.filter((reason) => reason.id && reason.id !== 'unjustified').length;
 		const alerts = behaviorRecords.filter((record) => record.studentId === student.id && withinPeriod(record.createdAt.slice(0, 10)));
 		return { student, absences, justifiedAbsences, unjustifiedAbsences: justifiedAbsences === null ? null : absences.length - justifiedAbsences, alerts };
-	}).filter(({ student }) => {
+	}).filter(({ student, absences }) => {
 		const query = searchTerm.trim().toLocaleLowerCase();
 		const matchesName = !query || `${student.firstName} ${student.lastName}`.toLocaleLowerCase().includes(query);
-		return matchesName && (selectedClass === 'all' || student.className === selectedClass);
+		return absences.length > 0 && matchesName && (selectedClass === 'all' || student.className === selectedClass);
 	}).sort((a, b) => `${a.student.lastName} ${a.student.firstName}`.localeCompare(`${b.student.lastName} ${b.student.firstName}`, 'ar')));
 	const selectedSummary = $derived(studentSummaries.find((item) => item.student.id === selectedStudentId) || null);
 
@@ -168,9 +168,9 @@
 		.filters .search-field { grid-column: 1 / -1; min-width: 0; }
 		.filters .class-filter { grid-column: 1 / -1; }
 		.filters label:not(.search-field) { min-width: 0; font-size: 0.9rem; }
-		.filters input, .filters select, .filters .search-field { min-height: 2.8rem; font-size: 1rem; }
+		.filters input, .filters select, .filters .search-field { min-height: 2.4rem; font-size: 1rem; }
 		.filters .search-field input { font-size: 1rem; }
-		.date-filter-toggle { display: block; grid-column: 1 / -1; min-height: 2.8rem; padding: 0.5rem 0.7rem; border: 1px solid var(--app-border); border-radius: 0.5rem; background: var(--app-surface); color: var(--app-accent); cursor: pointer; font: inherit; font-size: 1rem; font-weight: 700; }
+		.date-filter-toggle { display: block; grid-column: 1 / -1; min-height: 2.4rem; padding: 0.35rem 0.7rem; border: 1px solid var(--app-border); border-radius: 0.5rem; background: var(--app-surface); color: var(--app-accent); cursor: pointer; font: inherit; font-size: 0.95rem; font-weight: 700; }
 		.date-filter-toggle.active { background: var(--app-accent-soft); }
 		.date-range { display: none; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
 		.date-range.open { display: grid; }
@@ -178,15 +178,17 @@
 		.table-wrap { overflow: visible; border: 0; background: transparent; box-shadow: none; }
 		table { display: block; min-width: 0; }
 		thead { display: none; }
-		tbody { display: grid; gap: 0.45rem; }
-		tbody tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: 0.45rem; padding: 0.6rem; border: 1px solid var(--app-border); border-radius: 0.55rem; background: var(--app-surface); }
+		tbody { display: grid; gap: 0.3rem; }
+		tbody tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: 0.35rem; padding: 0.45rem 0.55rem; border: 1px solid var(--app-border); border-radius: 0.55rem; background: var(--app-surface); }
 		tbody tr.selected { background: var(--app-accent-soft); }
 		tbody td { display: flex; min-width: 0; flex-direction: column; gap: 0.12rem; padding: 0; border: 0; white-space: normal; font-size: 1rem; }
 		tbody td:nth-child(1) { grid-column: 1 / 3; }
 		tbody td:nth-child(2) { grid-column: 3; grid-row: 1; text-align: end; }
 		.mobile-label { display: block; color: var(--app-muted); font-size: 0.78rem; }
-		.student-select { font-size: 1.25rem; font-weight: 700; line-height: 1.25; }
-		.page-heading > button { min-height: 2.8rem !important; font-size: 1rem !important; }
+		.student-select { font-size: 1.05rem; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+		.page-heading { gap: 0.5rem !important; }
+		.page-heading > div { min-width: 0; flex: 1 1 12rem; }
+		.page-heading > button { flex: 0 1 auto; max-width: 100%; min-height: 2.4rem !important; padding: 0.3rem 0.7rem !important; font-size: 0.9rem !important; white-space: nowrap; }
 		.detail-backdrop.visible { position: fixed; z-index: 120; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding-top: 1rem; background: rgb(20 25 23 / 42%); }
 		.student-history { position: relative; width: min(100%, 44rem); max-height: 88dvh; overflow: auto; margin: 0; padding: 1rem; border-radius: 0.8rem 0.8rem 0 0; box-shadow: 0 -8px 28px rgb(0 0 0 / 14%); }
 		.summary-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -196,15 +198,15 @@
 		.timeline-columns li { font-size: 1rem; }
 		.close-detail { width: 2.75rem; height: 2.75rem; flex: 0 0 2.75rem; }
 		table { width: 100%; }
-		tbody tr { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.4rem 0.3rem; }
+		tbody tr { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.25rem 0.3rem; }
 		tbody td:nth-child(1) { grid-column: 1 / 4; }
 		tbody td:nth-child(2) { grid-column: 4; grid-row: 1; }
 		tbody td:nth-child(3) { grid-column: 1; grid-row: 2; }
 		tbody td:nth-child(4) { grid-column: 2; grid-row: 2; }
 		tbody td:nth-child(5) { grid-column: 3; grid-row: 2; }
 		tbody td:nth-child(6) { grid-column: 4; grid-row: 2; }
-		tbody td { font-size: 0.92rem; overflow-wrap: anywhere; }
-		.mobile-label { font-size: 0.7rem; }
+		tbody td { font-size: 0.88rem; overflow-wrap: anywhere; }
+		.mobile-label { font-size: 0.72rem; }
 	}
 
 	@media (max-width: 390px) {

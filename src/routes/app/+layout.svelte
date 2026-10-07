@@ -401,6 +401,7 @@ async function signOut() {
 		--app-danger: #b33d4e;
 		--app-shadow: 0 10px 30px rgba(67, 42, 43, 0.055);
 
+		color-scheme: light;
 		display: flex;
 		width: 100%;
 		min-height: 100dvh;
@@ -426,6 +427,16 @@ async function signOut() {
 		--app-success: #78ae8e;
 		--app-danger: #e18b99;
 		--app-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
+
+		/* global.css headings, text, small and form fields read these base tokens. */
+		--background: #252122;
+		--surface: #302a2c;
+		--surface-soft: #3b3234;
+		--surface-strong: #382f31;
+		--text: #f7efec;
+		--muted-text: #c5b7b4;
+		--border: #514547;
+		color-scheme: dark;
 	}
 
 	/* ================================
@@ -440,6 +451,9 @@ async function signOut() {
 		bottom: 0;
 		display: flex;
 		width: min(19rem, 86vw);
+		max-height: 100dvh;
+		overflow-y: auto;
+		overscroll-behavior: contain;
 		flex-direction: column;
 		border-inline-start: 1px solid var(--app-border);
 		background: var(--app-surface);
@@ -463,6 +477,10 @@ async function signOut() {
 	.application-sidebar.open {
 		transform: translateX(0);
 		pointer-events: auto;
+	}
+
+	.application-sidebar > * {
+		flex-shrink: 0;
 	}
 
 	.sidebar-brand {
@@ -595,7 +613,7 @@ async function signOut() {
 
 	.sidebar-bottom {
 		margin-top: auto;
-		padding: 1rem 0.8rem 1.1rem;
+		padding: 1rem 0.8rem calc(1.1rem + env(safe-area-inset-bottom));
 	}
 
 	.sidebar-user {

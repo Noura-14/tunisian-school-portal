@@ -624,7 +624,7 @@
 	.day-cell.today:not(.selected) { border-color:var(--app-accent); color:var(--app-accent); font-weight:850; }
 	.day-cell.has-absence:not(.selected) { background:#fff1f2; color:#9c2941; }
 	.day-cell.has-justified:not(.selected) { box-shadow:inset 0 -3px #538668; }
-	.day-cell small { position:absolute; inset-inline-end:.16rem; inset-block-start:.06rem; font-size:.58rem; line-height:1; }
+	.day-cell small { position:absolute; inset-inline-end:.16rem; inset-block-start:.06rem; font-size:.58rem; line-height:1; color:inherit; }
 	.calendar-legend { display:flex; flex-wrap:wrap; gap:.65rem; margin-top:.6rem; color:var(--app-muted); font-size:.75rem; }
 	.calendar-legend span { display:flex; align-items:center; gap:.25rem; }
 	.calendar-legend i { width:.62rem; height:.62rem; border-radius:50%; background:var(--app-accent); }
@@ -749,37 +749,39 @@
 		.record-filters.filters { grid-template-columns:minmax(0,1fr) minmax(6.5rem,.6fr); }
 	}
 	@media (max-width:760px) {
-		.workflow-setup .section-heading h2,.calendar-heading h2,.records-heading h2 { font-size:1.2rem; }
-		.workflow-setup .class-chips button { min-height:2.8rem; font-size:1.2rem; }
-		.workflow-setup .section-heading span { font-size:1.05rem; }
-		.chosen-student,.open-student-picker { min-height:2.9rem; font-size:1.2rem; }
-		.chosen-student strong,.student-option strong { font-size:1.25rem; }
-		.student-option small,.chosen-student span { font-size:1.05rem; }
-		.search-field input { font-size:1.25rem; }
-		.student-option { min-height:3.25rem; }
+		.workflow-setup .section-heading h2,.records-heading h2 { font-size:1.05rem; }
+		.calendar-heading h2 { font-size:1.2rem; }
+		.workflow-setup .class-chips button { min-height:2.4rem; font-size:.95rem; }
+		.workflow-setup .section-heading span { font-size:.9rem; }
+		.chosen-student,.open-student-picker { min-height:2.5rem; font-size:1rem; }
+		.chosen-student strong,.student-option strong { font-size:1.05rem; overflow-wrap:anywhere; }
+		.student-option small,.chosen-student span { font-size:.9rem; }
+		.search-field input { font-size:1rem; }
+		.student-option { min-height:2.7rem; }
 		.weekday-grid span { min-height:2.2rem; font-size:1rem; }
 		.day-cell { min-height:2.85rem; font-size:1.2rem; }
 		.mode-toggle button,.week-button { font-size:1.15rem; }
-		.absence-sheet .reason-options button { min-height:3rem; font-size:1.2rem; }
-		.sheet-heading h2 { font-size:1.25rem; }
-		.absence-record-person strong { font-size:1.25rem; }
-		.absence-record-person span,.absence-record-details span { font-size:1.1rem; }
-		.absence-record-details time { font-size:1.2rem; }
-		.record-class-chips button { min-height:2.8rem; font-size:1.1rem; }
-		.result-count { font-size:1rem; }
-		.compact-filter { font-size:1rem; }
-		.compact-filter input { font-size:1.1rem; }
+		.absence-sheet .reason-options button { min-height:2.6rem; font-size:1rem; }
+		.sheet-heading h2 { font-size:1.1rem; }
+		.absence-record-person strong { font-size:1.05rem; }
+		.absence-record-person span,.absence-record-details span { font-size:.9rem; }
+		.absence-record-details time { font-size:.95rem; }
+		.record-class-chips button { min-height:2.2rem; font-size:.9rem; }
+		.result-count { font-size:.9rem; }
+		.compact-filter { font-size:.9rem; }
+		.compact-filter input { font-size:1rem; }
 	}
 	.absence-header-actions { display:flex; flex:0 0 auto; align-items:center; gap:.4rem; }
 	.records-button { display:flex; min-height:2.75rem; align-items:center; gap:.35rem; padding:.4rem .65rem; border:1px solid var(--app-border); border-radius:.5rem; background:var(--app-surface); color:var(--app-text); cursor:pointer; font:inherit; font-size:.9rem; font-weight:700; }
 	.records-sheet-backdrop,.records-sheet-close { display:none; }
 	@media (max-width:760px) {
-		.page-heading { align-items:center; gap:.4rem; }
-		.page-heading > div { min-width:0; flex:1; }
+		.page-heading { align-items:center; flex-wrap:wrap; gap:.4rem; }
+		.page-heading > div { min-width:0; flex:1 1 9rem; }
 		.page-heading h1 { font-size:1.45rem; }
 		.page-heading p:last-child { font-size:.85rem; }
-		.absence-header-actions { gap:.25rem; }
-		.export-button,.records-button { min-height:2.25rem; gap:.25rem; padding:.32rem .45rem; border-radius:.4rem; font-size:.78rem; white-space:nowrap; }
+		.absence-header-actions { flex:1 1 100%; justify-content:flex-start; gap:.35rem; min-width:0; }
+		.absence-header-actions > button { flex:1 1 0; min-width:0; justify-content:center; }
+		.export-button,.records-button { min-height:2.25rem; gap:.25rem; padding:.32rem .5rem; border-radius:.4rem; font-size:.85rem; white-space:nowrap; }
 		.records-section { display:none; }
 		.records-sheet-backdrop { position:fixed; z-index:145; inset:0; display:block; background:rgb(20 25 23 / 46%); backdrop-filter:blur(2px); }
 		.records-section.mobile-open { position:fixed; z-index:146; inset-inline:.45rem; bottom:env(safe-area-inset-bottom); display:block; max-height:min(78dvh,48rem); overflow:auto; overscroll-behavior:contain; margin:0; padding:.55rem; border-radius:.65rem .65rem 0 0; }
@@ -796,7 +798,7 @@
 		.absence-record { grid-template-columns:minmax(0,1fr) auto auto; gap:.15rem .3rem; padding:.35rem .1rem; }
 		.absence-record-person { grid-column:1; grid-row:1; }
 		.absence-record-details { grid-column:1; grid-row:2; gap:.05rem; }
-		.absence-record-person strong { font-size:.95rem; }
+		.absence-record-person strong { overflow:visible; font-size:.98rem; line-height:1.3; white-space:normal; overflow-wrap:anywhere; text-overflow:clip; }
 		.absence-record-person span,.absence-record-details span { font-size:.78rem; }
 		.absence-record-details time { font-size:.85rem; }
 		.record-reason-action { grid-column:2; grid-row:1 / 3; width:1.9rem; height:1.9rem; font-size:1.05rem; }
